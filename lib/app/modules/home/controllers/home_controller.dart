@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../services/auth_service.dart';
 
 class ServiceCategory {
   final String title;
@@ -101,6 +103,33 @@ class HomeController extends GetxController {
   }
 
   void selectServiceCategory(int index) {
+    // Check if user is authenticated (not guest)
+    final authService = AuthService.to;
+    if (!authService.isAuthenticated) {
+      // Show login prompt for guest users
+      Get.dialog(
+        AlertDialog(
+          title: const Text('Login Required'),
+          content: const Text('Please sign in to access this service.'),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Get.back(); // Close dialog
+                Get.offNamed('/login'); // Go to login
+              },
+              child: const Text('Sign In'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // User is authenticated, proceed to service
     switch (index) {
       case 0:
         Get.toNamed('/residentid');

@@ -1,13 +1,29 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:logging/logging.dart';
 import 'app/constants/colors.dart';
 import 'app/constants/fonts.dart';
+import 'app/controllers/bottom_navigation_controller.dart';
 import 'app/routes/app_pages.dart';
 import 'services/auth_service.dart';
+import 'services/api_service.dart';
 
 void main() async {
-  // Initialize AuthService
+  // Configure logging to reduce startup noise
+  Logger.root.level = Level.WARNING;
+  Logger.root.onRecord.listen((record) {
+    developer.log(
+      record.message,
+      level: record.level.value,
+      name: record.loggerName,
+    );
+  });
+
+  // Initialize services
   Get.put<AuthService>(AuthService(), permanent: true);
+  Get.put<ApiService>(ApiService(), permanent: true);
+  Get.put<BottomNavigationController>(BottomNavigationController(), permanent: true);
   runApp(const MyApp());
 }
 
@@ -18,7 +34,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'CRRSA Mobile App',
+      title: 'CRRSA App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: AppColors.primary,
         colorScheme: ColorScheme.fromSeed(

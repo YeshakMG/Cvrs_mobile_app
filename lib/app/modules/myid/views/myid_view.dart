@@ -10,19 +10,22 @@ class MyidView extends GetView<MyidController> {
 
   @override
   Widget build(BuildContext context) {
-    // Adjustable top padding for the whole card section
-    const double topPadding = 80.0;
-    // Dashed border settings
-    const double dashLength = 50.0;
-    const double gapLength = 100;
-    const double borderWidth = 4.0;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'My ID',
-          style: TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.normal),
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+            final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
+            final fontSize = isMobile ? 16.0 : (isTablet ? 18.0 : 20.0);
+            return Text(
+              'My ID',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+                fontWeight: FontWeight.normal,
+              ),
+            );
+          },
         ),
         centerTitle: false,
         backgroundColor: AppColors.primary,
@@ -32,55 +35,76 @@ class MyidView extends GetView<MyidController> {
           onPressed: () => Get.offNamed('/home'),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(height: topPadding),
-            const Text(
-              'Front Side',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.normal,
-                color: AppColors.secondary,
-                
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 600;
+          final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
+
+          // Responsive dimensions
+          final topPadding = constraints.maxHeight * (isMobile ? 0.1 : 0.08);
+          final cardWidth = constraints.maxWidth * (isMobile ? 0.85 : isTablet ? 0.7 : 0.5);
+          final cardHeight = cardWidth * 0.625; // Maintain aspect ratio
+          final textFontSize = isMobile ? 16.0 : (isTablet ? 18.0 : 20.0);
+          final spacing = isMobile ? 10.0 : (isTablet ? 15.0 : 20.0);
+
+          // Dashed border settings
+          final dashLength = isMobile ? 50.0 : 60.0;
+          final gapLength = isMobile ? 100.0 : 120.0;
+          final borderWidth = isMobile ? 4.0 : 5.0;
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: constraints.maxHeight * 0.02),
+              child: Column(
+                children: [
+                  SizedBox(height: topPadding),
+                  Text(
+                    'Front Side',
+                    style: TextStyle(
+                      fontSize: textFontSize,
+                      fontWeight: FontWeight.normal,
+                      color: AppColors.secondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: spacing),
+                  Center(
+                    child: DashedBorderCard(
+                      width: cardWidth,
+                      height: cardHeight,
+                      dashLength: dashLength,
+                      gapLength: gapLength,
+                      borderWidth: borderWidth,
+                      child: Image.asset('assets/images/myid_fronnt.png', fit: BoxFit.cover),
+                    ),
+                  ),
+                  SizedBox(height: spacing * 2),
+                  Text(
+                    'Back Side',
+                    style: TextStyle(
+                      fontSize: textFontSize,
+                      fontWeight: FontWeight.normal,
+                      color: AppColors.secondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: spacing),
+                  Center(
+                    child: DashedBorderCard(
+                      width: cardWidth,
+                      height: cardHeight,
+                      dashLength: dashLength,
+                      gapLength: gapLength,
+                      borderWidth: borderWidth,
+                      child: Image.asset('assets/images/myid_back.png', fit: BoxFit.cover),
+                    ),
+                  ),
+                  SizedBox(height: spacing * 2),
+                ],
               ),
-              textAlign: TextAlign.right,
             ),
-            const SizedBox(height: 10),
-            Center(
-              child: DashedBorderCard(
-                width: 320,
-                height: 200,
-                dashLength: dashLength,
-                gapLength: gapLength,
-                borderWidth: borderWidth,
-                child: Image.asset('assets/images/myid_fronnt.png', fit: BoxFit.cover),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Back Side',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.normal,
-                color: AppColors.secondary,
-              ),
-              textAlign: TextAlign.right,
-            ),
-            const SizedBox(height: 10),
-            Center(
-              child: DashedBorderCard(
-                width: 320,
-                height: 200,
-                dashLength: dashLength,
-                gapLength: gapLength,
-                borderWidth: borderWidth,
-                child: Image.asset('assets/images/myid_back.png', fit: BoxFit.cover),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
+          );
+        },
       ),
       bottomNavigationBar: const BottomNavigationWidget(),
     );

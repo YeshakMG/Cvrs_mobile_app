@@ -8,7 +8,7 @@ class ServiceComplaintController extends GetxController {
   final List<String> serviceTypes = [
     'Resident ID',
     'Birth Certificate', 
-    'Death Certificate',
+  
     'Adoption  Certificate',
     'Marriage Certificate',
     'Family resgistration',
@@ -43,10 +43,27 @@ class ServiceComplaintController extends GetxController {
     'Mesob': ['Mesob Central', 'Mesob 2', 'Mesob 3'],
   };
 
+  // Woredas based on sub-branch
+  final Map<String, List<String>> woredas = {
+    'Addis Ketema': ['Woreda 1', 'Woreda 2', 'Woreda 3'],
+    'Akaki Kaliti': ['Woreda 1', 'Woreda 2'],
+    'Arada': ['Woreda 1', 'Woreda 2', 'Woreda 3', 'Woreda 4'],
+    'Bole': ['Woreda 1', 'Woreda 2', 'Woreda 3', 'Woreda 4', 'Woreda 5'],
+    'Gullele': ['Woreda 1', 'Woreda 2', 'Woreda 3'],
+    'Kirkos': ['Woreda 1', 'Woreda 2', 'Woreda 3', 'Woreda 4'],
+    'Kolfe Keranio': ['Woreda 1', 'Woreda 2', 'Woreda 3', 'Woreda 4'],
+    'Lideta': ['Woreda 1', 'Woreda 2', 'Woreda 3'],
+    'Nifas Silk-Lafto': ['Woreda 1', 'Woreda 2', 'Woreda 3', 'Woreda 4'],
+    'Yeka': ['Woreda 1', 'Woreda 2', 'Woreda 3', 'Woreda 4', 'Woreda 5'],
+    'Lemi Kura': ['Woreda 1', 'Woreda 2'],
+    // Add for other branches if needed
+  };
+
   // Selected values
   final selectedServiceType = ''.obs;
   final selectedBranch = ''.obs; // Start with empty to hide sub-branches initially
   final selectedSubBranch = ''.obs;
+  final selectedWoreda = ''.obs;
 
   // Text controller for description
   final TextEditingController descriptionController = TextEditingController();
@@ -66,8 +83,19 @@ class ServiceComplaintController extends GetxController {
     final subBranchList = subBranches[selectedBranch.value] ?? [];
     if (subBranchList.isNotEmpty) {
       selectedSubBranch.value = subBranchList[0];
+      updateWoredaOptions();
     } else {
       selectedSubBranch.value = '';
+      selectedWoreda.value = '';
+    }
+  }
+
+  void updateWoredaOptions() {
+    final woredaList = woredas[selectedSubBranch.value] ?? [];
+    if (woredaList.isNotEmpty) {
+      selectedWoreda.value = woredaList[0];
+    } else {
+      selectedWoreda.value = '';
     }
   }
 
@@ -113,11 +141,35 @@ class ServiceComplaintController extends GetxController {
   }
 
   void submitComplaint() {
-    if (descriptionController.text.isEmpty) {
+    // Validation
+    List<String> errors = [];
+
+    if (selectedServiceType.value.isEmpty) {
+      errors.add('Please select a service type');
+    }
+
+    if (selectedBranch.value.isEmpty) {
+      errors.add('Please select a branch');
+    }
+
+    if (selectedSubBranch.value.isEmpty) {
+      errors.add('Please select a sub-branch');
+    }
+
+    if (selectedBranch.value == 'Sub-cities' && selectedWoreda.value.isEmpty) {
+      errors.add('Please select a woreda');
+    }
+
+    if (descriptionController.text.trim().isEmpty) {
+      errors.add('Please enter a description');
+    }
+
+    if (errors.isNotEmpty) {
       Get.snackbar(
-        'Error',
-        'Please enter a description',
+        'Validation Error',
+        errors.join('\n'),
         snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 5),
       );
       return;
     }
@@ -127,7 +179,18 @@ class ServiceComplaintController extends GetxController {
       'Success',
       'Complaint submitted successfully',
       snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
     );
+
+    // Reset form
+    selectedServiceType.value = '';
+    selectedBranch.value = '';
+    selectedSubBranch.value = '';
+    selectedWoreda.value = '';
+    descriptionController.clear();
+    selectedFileName.value = '';
+    selectedFile = null;
 
     // Navigate back or to success page
     Get.back();

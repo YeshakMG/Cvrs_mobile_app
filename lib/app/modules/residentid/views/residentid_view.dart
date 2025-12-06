@@ -8,15 +8,18 @@ import '../controllers/residentid_controller.dart';
 class ResidentidView extends GetView<ResidentidController> {
   const ResidentidView({super.key});
 
-  Widget _buildStatusTab(RequestStatus status) {
+  Widget _buildStatusTab(RequestStatus status, bool isTablet) {
     return Obx(() {
       final isSelected = controller.selectedStatus.value == status;
       return GestureDetector(
         onTap: () => controller.selectStatus(status),
         child: Container(
           key: ValueKey(status),
-          margin: const EdgeInsets.only(right: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin: EdgeInsets.only(right: isTablet ? 16 : 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 20 : 16,
+            vertical: isTablet ? 12 : 8,
+          ),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : Colors.grey[200],
             borderRadius: BorderRadius.circular(20),
@@ -27,6 +30,7 @@ class ResidentidView extends GetView<ResidentidController> {
               style: AppFonts.captionStyle.copyWith(
                 color: isSelected ? Colors.white : Colors.black87,
                 fontWeight: isSelected ? AppFonts.semiBold : AppFonts.regular,
+                fontSize: isTablet ? 14 : 12,
               ),
             ),
           ),
@@ -35,14 +39,14 @@ class ResidentidView extends GetView<ResidentidController> {
     });
   }
 
-  Widget _buildServiceCard(ResidentService service) {
+  Widget _buildServiceCard(ResidentService service, bool isTablet) {
     return Semantics(
       label: 'Service card for ${service.serviceType}',
       child: GestureDetector(
         onTap: () => controller.navigateToServiceDetail(service),
         child: Card(
           key: ValueKey(service.applicationId),
-          margin: const EdgeInsets.only(bottom: 8),
+          margin: EdgeInsets.only(bottom: isTablet ? 12 : 8),
           elevation: 4,
           shadowColor: Colors.black.withValues(alpha: 0.3),
           shape: RoundedRectangleBorder(
@@ -53,23 +57,23 @@ class ResidentidView extends GetView<ResidentidController> {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(isTablet ? 16 : 12),
             child: Row(
               children: [
                 // Icon
                 Container(
-                  width: 50,
-                  height: 50,
+                  width: isTablet ? 60 : 50,
+                  height: isTablet ? 60 : 50,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     service.icon,
                     color: AppColors.primary,
-                    size: 24,
+                    size: isTablet ? 28 : 24,
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: isTablet ? 20 : 16),
                 // Content
                 Expanded(
                   child: Column(
@@ -81,10 +85,10 @@ class ResidentidView extends GetView<ResidentidController> {
                         style: AppFonts.bodyText2Style.copyWith(
                           fontWeight: AppFonts.semiBold,
                           color: Colors.black,
-                          fontSize: 14,
+                          fontSize: isTablet ? 16 : 14,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: isTablet ? 10 : 8),
                       // Application ID and Status in row
                       Row(
                         children: [
@@ -95,12 +99,16 @@ class ResidentidView extends GetView<ResidentidController> {
                               style: AppFonts.overlineStyle.copyWith(
                                 color: AppColors.fifth,
                                 fontWeight: AppFonts.bold,
+                                fontSize: isTablet ? 13 : 12,
                               ),
                             ),
                           ),
                           // Status with color
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1,),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isTablet ? 8 : 6,
+                              vertical: isTablet ? 4 : 1,
+                            ),
                             decoration: BoxDecoration(
                               color: controller.getStatusColor(service.status),
                               borderRadius: BorderRadius.circular(12),
@@ -110,17 +118,19 @@ class ResidentidView extends GetView<ResidentidController> {
                               style: AppFonts.captionStyle.copyWith(
                                 color: Colors.white,
                                 fontWeight: AppFonts.regular,
+                                fontSize: isTablet ? 12 : 11,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: isTablet ? 6 : 4),
                       // Description
                       Text(
                         service.description,
                         style: AppFonts.captionStyle.copyWith(
                           color: Colors.grey[600],
+                          fontSize: isTablet ? 13 : 12,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -140,30 +150,44 @@ class ResidentidView extends GetView<ResidentidController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Resident Service',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-          ),
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+            final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
+            final fontSize = isMobile ? 16.0 : (isTablet ? 18.0 : 20.0);
+            return Text(
+              'Resident Service',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+              ),
+            );
+          },
         ),
         centerTitle: false,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: Column(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 600;
+          final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
+          final padding = isMobile ? 16.0 : (isTablet ? 24.0 : 32.0);
+
+          return Column(
         children: [
           // Horizontal scrollable status tabs
           Container(
-            height: 50,
-            margin: const EdgeInsets.symmetric(vertical: 10),
+            height: isTablet ? 60 : 50,
+            margin: EdgeInsets.symmetric(vertical: isTablet ? 16 : 10),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: padding),
               itemCount: RequestStatus.values.length,
               itemBuilder: (context, index) {
                 final status = RequestStatus.values[index];
-                return _buildStatusTab(status);
+                return _buildStatusTab(status, isTablet);
               },
             ),
           ),
@@ -171,32 +195,68 @@ class ResidentidView extends GetView<ResidentidController> {
           // Content area - Service cards list
           Expanded(
             child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              if (controller.errorMessage.value.isNotEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: padding),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          controller.errorMessage.value,
+                          style: AppFonts.bodyText2Style.copyWith(
+                            color: Colors.red,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => controller.fetchResidentServices(),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
               final services = controller.filteredServices;
               if (services.isEmpty) {
                 return Center(
-                  child: Text(
-                    'No services found for ${controller.getStatusDisplayName(controller.selectedStatus.value).toLowerCase()} status',
-                    style: AppFonts.bodyText2Style.copyWith(
-                      color: Colors.grey[600],
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: padding),
+                    child: Text(
+                      'No services found for ${controller.getStatusDisplayName(controller.selectedStatus.value).toLowerCase()} status',
+                      style: AppFonts.bodyText2Style.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 );
               }
 
               return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(padding),
                 itemCount: services.length,
                 itemBuilder: (context, index) {
                   final service = services[index];
-                  return _buildServiceCard(service);
+                  return _buildServiceCard(service, isTablet);
                 },
               );
             }),
           ),
         ],
-      ),
-    );
+      );
+    },
+  ),
+);
   }
 }
 

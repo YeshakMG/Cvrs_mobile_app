@@ -9,6 +9,7 @@ class LoginController extends GetxController {
   final rememberMe = false.obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
+  final obscurePassword = true.obs;
 
   // Auth service
   final AuthService _authService = Get.find<AuthService>();
@@ -26,8 +27,15 @@ class LoginController extends GetxController {
   }
 
   Future<void> login() async {
-    if (email.value.isEmpty || password.value.isEmpty) {
-      errorMessage.value = 'Please fill in all fields';
+    // Validate input fields
+    if (email.value.trim().isEmpty && password.value.trim().isEmpty) {
+      errorMessage.value = 'Please enter your username and password';
+      return;
+    } else if (email.value.trim().isEmpty) {
+      errorMessage.value = 'Please enter your username';
+      return;
+    } else if (password.value.trim().isEmpty) {
+      errorMessage.value = 'Please enter your password';
       return;
     }
 
@@ -35,20 +43,36 @@ class LoginController extends GetxController {
     errorMessage.value = '';
 
     try {
-      final success = await _authService.login(email.value, password.value);
-      
+      final success = await _authService.login(email.value.trim(), password.value.trim());
+
       if (success) {
         // Login successful - navigate to home
+        print('Login successful');
         Get.offNamed('/home');
       } else {
-        errorMessage.value = 'Invalid username or password';
+        // Provide user-friendly error messages based on auth service response
+        final authError = _authService.errorMessage.value.toLowerCase();
+        if (authError.contains('invalid') || authError.contains('unauthorized') || authError.contains('401')) {
+          errorMessage.value = 'Invalid username or password. Please check your credentials and try again.';
+        } else if (authError.contains('network') || authError.contains('connection')) {
+          errorMessage.value = 'Network connection error. Please check your internet connection and try again.';
+        } else if (authError.contains('timeout')) {
+          errorMessage.value = 'Connection timeout. Please try again.';
+        } else {
+          errorMessage.value = 'Unable to sign in. Please try again later.';
+        }
       }
     } catch (e) {
-      errorMessage.value = 'Login failed. Please try again.';
+      errorMessage.value = 'Something went wrong. Please check your connection and try again.';
       print('Login error: $e');
     } finally {
       isLoading.value = false;
     }
+  }
+
+  void loginAsGuest() {
+    // Set guest mode - navigate to home without authentication
+    Get.offNamed('/home');
   }
 
   void forgotPassword() {

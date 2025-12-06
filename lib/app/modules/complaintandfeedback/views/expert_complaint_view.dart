@@ -27,6 +27,21 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+            final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
+
+            // Responsive dimensions
+            final padding = isMobile ? 16.0 : (isTablet ? 24.0 : 32.0);
+            final scanButtonWidth = isMobile ? 250.0 : (isTablet ? 300.0 : 350.0);
+            final scanButtonPadding = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
+            final scanIconSize = isMobile ? 32.0 : (isTablet ? 36.0 : 40.0);
+            final fontSize = isMobile ? 14.0 : (isTablet ? 16.0 : 18.0);
+            final spacing = isMobile ? 12.0 : (isTablet ? 16.0 : 20.0);
+            final cardPadding = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
+            final textFieldPadding = isMobile ? 8.0 : (isTablet ? 10.0 : 12.0);
+            final attachmentPadding = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
+            final buttonPadding = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
+
             return SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -36,7 +51,7 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                   // Center content vertically
                   return IntrinsicHeight(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0), // 👈 added padding
+                      padding: EdgeInsets.symmetric(horizontal: padding),
                       child: Column(
                         mainAxisAlignment: controller.expertName.isEmpty
                             ? MainAxisAlignment.center
@@ -52,17 +67,17 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                   style: AppFonts.bodyText1Style.copyWith(
                                     fontWeight: AppFonts.regular,
                                     color: AppColors.primary,
-                                    fontSize: 14,
+                                    fontSize: fontSize,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: spacing),
                                 InkWell(
                                   onTap: controller.startScanning,
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16, horizontal: 30),
-                                    width: 250,
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: scanButtonPadding, horizontal: scanButtonPadding * 1.875), // 30/16 = 1.875
+                                    width: scanButtonWidth,
                                     decoration: BoxDecoration(
                                       border: Border.all(color: AppColors.primary),
                                       borderRadius: BorderRadius.circular(8),
@@ -73,13 +88,14 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                         Icon(
                                           Icons.qr_code_scanner,
                                           color: AppColors.primary,
-                                          size: 32,
+                                          size: scanIconSize,
                                         ),
-                                        const SizedBox(width: 12),
+                                        SizedBox(width: spacing),
                                         Text(
                                           'Scan QR Code',
                                           style: AppFonts.bodyText2Style.copyWith(
                                             color: AppColors.primary,
+                                            fontSize: fontSize,
                                           ),
                                         ),
                                       ],
@@ -99,7 +115,7 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                   ),
                                   elevation: 4,
                                   child: Padding(
-                                    padding: const EdgeInsets.all(16),
+                                    padding: EdgeInsets.all(cardPadding),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
@@ -108,34 +124,34 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                           style: AppFonts.bodyText1Style.copyWith(
                                             fontWeight: AppFonts.semiBold,
                                             color: AppColors.primary,
-                                            fontSize: 14,
+                                            fontSize: fontSize,
                                           ),
                                         ),
-                                        const SizedBox(height: 12),
+                                        SizedBox(height: spacing),
                                         _buildDetailRow(
-                                            'Name', controller.expertName.value),
+                                            'Name', controller.expertName.value, isMobile, isTablet),
                                         _buildDetailRow('Position',
-                                            controller.expertPosition.value),
+                                            controller.expertPosition.value, isMobile, isTablet),
                                         _buildDetailRow('Department',
-                                            controller.expertDepartment.value),
+                                            controller.expertDepartment.value, isMobile, isTablet),
                                         _buildDetailRow(
-                                            'Branch', controller.expertBranch.value),
+                                            'Branch', controller.expertBranch.value, isMobile, isTablet),
                                       ],
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 20),
+                                SizedBox(height: spacing * 1.25), // 20/16 = 1.25
 
                                 // Description
                                 Padding(
                                   padding:
-                                      const EdgeInsets.only(left: 8.0, bottom: 4),
+                                      EdgeInsets.only(left: textFieldPadding, bottom: 4),
                                   child: Text(
                                     'Description',
                                     style: AppFonts.bodyText1Style.copyWith(
                                       fontWeight: AppFonts.semiBold,
                                       color: AppColors.primary,
-                                      fontSize: 14,
+                                      fontSize: fontSize,
                                     ),
                                   ),
                                 ),
@@ -148,7 +164,7 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                   cursorRadius: const Radius.circular(2),
                                   decoration: InputDecoration(
                                     hintText: 'Type your complaint here...',
-                                    hintStyle: const TextStyle(fontSize: 14),
+                                    hintStyle: TextStyle(fontSize: fontSize),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
                                       borderSide: const BorderSide(
@@ -163,25 +179,25 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                         '${controller.descriptionController.text.length}/100',
                                   ),
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: spacing),
 
                                 // Attachments
                                 Padding(
                                   padding:
-                                      const EdgeInsets.only(left: 8.0, bottom: 4),
+                                      EdgeInsets.only(left: textFieldPadding, bottom: 4),
                                   child: Text(
                                     'Attachments',
                                     style: AppFonts.bodyText1Style.copyWith(
                                       fontWeight: AppFonts.semiBold,
                                       color: AppColors.primary,
-                                      fontSize: 14,
+                                      fontSize: fontSize,
                                     ),
                                   ),
                                 ),
                                 InkWell(
                                   onTap: controller.pickAttachment,
                                   child: Container(
-                                    padding: const EdgeInsets.all(16),
+                                    padding: EdgeInsets.all(attachmentPadding),
                                     decoration: BoxDecoration(
                                       border: Border.all(color: AppColors.primary),
                                       borderRadius: BorderRadius.circular(8),
@@ -191,9 +207,9 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                         Icon(
                                           Icons.attach_file,
                                           color: AppColors.primary,
-                                          size: 24,
+                                          size: isMobile ? 24.0 : (isTablet ? 26.0 : 28.0),
                                         ),
-                                        const SizedBox(width: 12),
+                                        SizedBox(width: spacing),
                                         Expanded(
                                           child: Obx(() => Text(
                                                 controller.selectedFileName.value
@@ -209,6 +225,7 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                                           .isEmpty
                                                       ? AppColors.textSecondary
                                                       : AppColors.primary,
+                                                  fontSize: fontSize,
                                                 ),
                                               )),
                                         ),
@@ -216,7 +233,7 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 24),
+                                SizedBox(height: spacing * 2),
 
                                 // Submit Button
                                 SizedBox(
@@ -227,8 +244,8 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                             : controller.submitComplaint,
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: AppColors.primary,
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 16),
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: buttonPadding),
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(8),
                                           ),
@@ -242,7 +259,7 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                                     AppFonts.bodyText1Style.copyWith(
                                                   fontWeight: AppFonts.regular,
                                                   color: Colors.white,
-                                                  fontSize: 14,
+                                                  fontSize: fontSize,
                                                 ),
                                               ),
                                       )),
@@ -263,19 +280,24 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, bool isMobile, bool isTablet) {
+    final labelWidth = isMobile ? 120.0 : (isTablet ? 140.0 : 160.0);
+    final padding = isMobile ? 8.0 : (isTablet ? 10.0 : 12.0);
+    final fontSize = isMobile ? null : (isTablet ? 14.0 : 16.0);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: padding),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: labelWidth,
             child: Text(
               '$label:',
               style: AppFonts.bodyText2Style.copyWith(
                 fontWeight: AppFonts.medium,
                 color: AppColors.textPrimary,
+                fontSize: fontSize,
               ),
             ),
           ),
@@ -285,6 +307,7 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
               style: AppFonts.bodyText2Style.copyWith(
                 color: AppColors.primary,
                 fontWeight: AppFonts.semiBold,
+                fontSize: fontSize,
               ),
             ),
           ),

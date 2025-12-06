@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
-import '../../../routes/app_pages.dart';
 import '../../../../widgets/bottom_navigation.dart';
+import '../../../../services/auth_service.dart';
 import '../controllers/home_controller.dart';
 
 class HomeView extends GetView<HomeController> {
@@ -18,122 +18,162 @@ class HomeView extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Stack(
-          children: [
-            // Header Section with positioned elements
-            _buildHeader(),
+        child: OrientationBuilder(
+          builder: (context, orientation) {
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                // Determine device type based on screen width
+                final isMobile = constraints.maxWidth < 600;
+                final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
 
-            // Announcements Banner positioned at specified layout
-            Positioned(
-              top: 70,
-              left: 20,
-              right: 20, // Add right constraint to prevent overflow
-              child: SizedBox(
-                height: kBannerHeight,
-                child: _buildAnnouncementsBanner(),
-              ),
-            ),
+                // Responsive dimensions
+                final horizontalPadding = isMobile ? constraints.maxWidth * 0.05 :
+                                      isTablet ? constraints.maxWidth * 0.08 :
+                                      constraints.maxWidth * 0.12;
+                final verticalPadding = constraints.maxHeight * 0.01;
+                final bannerHeight = constraints.maxHeight * 0.22; // 22% as in provided design
 
-            // Stepper indicator below the banner
-            Positioned(
-              top: 300, // Adjusted for new banner position
-              left: 16,
-              right: 16,
-              child: _buildStepperIndicator(),
-            ),
+                // Fixed spacing: 2 units between all sections
+                final sectionSpacing = 2.0; // 2 units between sections
 
-            // "Check Your Status" title above the card
-            Positioned(
-              top: 330,
-              left: 20,
-              right: 20,
-              child: Text(
-                'Check Your Status',
-                style: AppFonts.bodyText1Style.copyWith(
-                  fontWeight: AppFonts.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
+                // Font sizes
+                final sectionTitleFontSize = isMobile ? null : (isTablet ? 18.0 : 20.0);
 
-            // Check Your Status card (contains only Enter Code and input field)
-            Positioned(
-              top: 365, // Adjusted for new title position
-              left: 20,
-              right: 20,
-              child: Container(
-                constraints: BoxConstraints(
-                  minHeight: 60, // Minimum height
-                  maxHeight: 80, // Maximum height to prevent overflow
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: _buildCheckStatusSection(),
-                ),
-              ),
-            ),
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Section
+                      _buildHeader(constraints, isMobile, isTablet),
 
-            // Service Categories positioned below Check Your Status
-            Positioned(
-              top: 460, // Adjusted for new card position
-              left: 20,
-              right: 20,
-              child: _buildServiceCategories(),
-            ),
+                      // Announcements Banner
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: 8.0, // 8 units spacing between header and banner
+                        ),
+                        child: SizedBox(
+                          height: bannerHeight,
+                          child: _buildAnnouncementsBanner(),
+                        ),
+                      ),
 
-            SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 650, left: 16.0, right: 16.0, bottom: 80.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Add bottom spacing to ensure content doesn't overlap with navigation
-                  const SizedBox(height: 50),
-                ],
-              ),
-            ),
+                      // Stepper indicator below the banner
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: 8.0, // 8 units spacing between banner and indicator
+                        ),
+                        child: _buildStepperIndicator(isMobile, isTablet),
+                      ),
 
-            // Bottom Navigation Bar positioned at the bottom, overlaying content
+                      // "Check Your Status" section
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: 10.0, // 10 units spacing between stepper and check status
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Check Your Status',
+                              style: AppFonts.bodyText1Style.copyWith(
+                                fontWeight: AppFonts.bold,
+                                color: AppColors.primary,
+                                fontSize: sectionTitleFontSize,
+                              ),
+                            ),
+                            SizedBox(height: isMobile ? 12 : 16),
+                            Container(
+                              width: double.infinity,
+                              constraints: BoxConstraints(
+                                minHeight: isMobile ? 40 : (isTablet ? 50 : 60),
+                                maxHeight: isMobile ? 50 : (isTablet ? 60 : 70),
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  )
+                                ],
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.all(isMobile ? 10 : (isTablet ? 12 : 15)),
+                                child: _buildCheckStatusSection(isMobile, isTablet),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-          ],
+                      // Spacing between check status and service categories
+                      SizedBox(height: sectionSpacing),
+
+                      // Service Categories - Fixed height to allow scrolling
+                      SizedBox(
+                        height: constraints.maxHeight * 0.5, // Adjust height as needed
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            left: horizontalPadding,
+                            right: horizontalPadding,
+                            top: 30.0, // 30 units spacing between check status and service categories
+                            bottom: sectionSpacing,
+                          ),
+                          child: _buildServiceCategories(constraints, isMobile, isTablet),
+                        ),
+                      ),
+
+                      // Minimal bottom spacing for navigation
+                      SizedBox(height: isMobile ? 20 : (isTablet ? 30 : 40)),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
         ),
       ),
       bottomNavigationBar: const BottomNavigationWidget(),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BoxConstraints constraints, bool isMobile, bool isTablet) {
+    final authService = AuthService.to;
+    final userName = authService.currentUser['name'] ?? authService.currentUser['preferred_username'] ?? 'User';
+
+    final headerHeight = isMobile ? 50.0 : (isTablet ? 55.0 : 60.0);
+    final horizontalPadding = isMobile ? 14.0 : (isTablet ? 18.0 : 24.0);
+    final iconSize = isMobile ? 18.0 : (isTablet ? 20.0 : 22.0);
+    final fontSize = isMobile ? null : (isTablet ? 16.0 : 18.0);
+
     return Container(
       width: double.infinity,
-      height: 60, // Reduced height for header
-      padding: const EdgeInsets.symmetric(horizontal: 14), // Add horizontal padding
+      height: headerHeight,
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Stack(
         children: [
-          // Welcome Yeshak Mesfin text positioned at top left
+          // Welcome user text positioned at top left
           Positioned(
-            top: 20,
-            left: 15, // Position from container start
-            right: 120, // Leave space for icons on the right
+            top: isMobile ? 20 : (isTablet ? 24 : 28),
+            left: isMobile ? 15 : (isTablet ? 18 : 24),
+            right: isMobile ? 120 : (isTablet ? 140 : 160), // Leave space for icons on the right
             child: SizedBox(
-              height: 20,
+              height: isMobile ? 20 : (isTablet ? 24 : 28),
               child: Text(
-                'Welcome, Yeshak Mesfin',
+                'Welcome, $userName',
                 style: AppFonts.bodyText1Style.copyWith(
                   fontWeight: AppFonts.medium,
                   color: AppColors.primary,
+                  fontSize: fontSize,
                 ),
-                overflow: TextOverflow.ellipsis, // Handle text overflow
+                overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
             ),
@@ -141,18 +181,18 @@ class HomeView extends GetView<HomeController> {
 
           // Notification icon positioned at specified location
           Positioned(
-            top: 20,
-            right: 50, // Position from right edge
+            top: isMobile ? 20 : (isTablet ? 24 : 28),
+            right: isMobile ? 50 : (isTablet ? 60 : 70),
             child: SizedBox(
-              width: 18,
-              height: 18,
+              width: iconSize,
+              height: iconSize,
               child: IconButton(
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(), // Remove default constraints
+                constraints: const BoxConstraints(),
                 icon: Icon(
                   Icons.notifications,
                   color: AppColors.primary,
-                  size: 18,
+                  size: iconSize,
                 ),
                 onPressed: () {
                   Get.snackbar('Notifications', 'Coming soon!');
@@ -163,31 +203,22 @@ class HomeView extends GetView<HomeController> {
 
           // Language selector positioned at specified location
           Positioned(
-            top: 10, // Adjusted for smaller header
-            right: 0, // Position from right edge
+            top: isMobile ? 10 : (isTablet ? 12 : 16),
+            right: 0,
             child: SizedBox(
-              width: 45,
-              height: 35,
+              width: isMobile ? 45 : (isTablet ? 50 : 55),
+              height: isMobile ? 35 : (isTablet ? 40 : 45),
               child: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(isMobile ? 10 : (isTablet ? 12 : 14)),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.language,
                       color: AppColors.primary,
-                      size: 18,
+                      size: iconSize,
                     ),
-                    const SizedBox(width: 5),
-                    // Text(
-                    //   'En',
-                    //   style: TextStyle(
-                    //     fontFamily: 'Montserrat',
-                    //     fontSize: 12,
-                    //     fontWeight: FontWeight.w500,
-                    //     color: const Color(0xFF073C59),
-                    //     ),
-                    // ),
+                    SizedBox(width: isMobile ? 5 : 8),
                   ],
                 ),
               ),
@@ -198,140 +229,217 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildServiceCategories() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
+  Widget _buildServiceCategories(BoxConstraints constraints, bool isMobile, bool isTablet) {
+    final crossAxisCount = isTablet ? 3 : (constraints.maxWidth >= 1200 ? 4 : 2);
+    final spacing = isMobile ? 12.0 : (isTablet ? 16.0 : 20.0);
+    final topSpacing = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
 
-        // First row of service cards
-        Row(
-          children: [
-            Expanded(child: _serviceCard(
-              Icons.person,
-              'Resident Services',
-              'Manage your personal identification documents',
-              () => controller.selectServiceCategory(0),
-            )),
-            const SizedBox(width: 12),
-            Expanded(child: _serviceCard(
-              Icons.book,
-              'Vital Services',
-              'Access vital records and certificates',
-              () => controller.selectServiceCategory(1),
-            )),
-          ],
-        ),
-        const SizedBox(height: 16),
+    final services = [
+      {
+        'icon': Icons.person,
+        'title': 'Resident Services',
+        'description': 'Manage your personal identification documents',
+        'onTap': () => controller.selectServiceCategory(0),
+      },
+      {
+        'icon': Icons.book,
+        'title': 'Vital Services',
+        'description': 'Access vital records and certificates',
+        'onTap': () => controller.selectServiceCategory(1),
+      },
+      {
+        'icon': Icons.description,
+        'title': 'Digital Certificates',
+        'description': 'Download and verify digital documents',
+        'onTap': () => controller.selectServiceCategory(2),
+      },
+      {
+        'icon': Icons.feedback,
+        'title': 'Complaint & Feedback',
+        'description': 'Submit complaints and provide feedback',
+        'onTap': () => controller.selectServiceCategory(3),
+      },
+    ];
 
-        // Second row of service cards
-        Row(
-          children: [
-            Expanded(child: _serviceCard(
-              Icons.description,
-              'Digital Certificates',
-              'Download and verify digital documents',
-              () => controller.selectServiceCategory(2),
-            )),
-            const SizedBox(width: 12),
-            Expanded(child: _serviceCard(
-              Icons.feedback,
-              'Complaint & Feedback',
-              'Submit complaints and provide feedback',
-              () => controller.selectServiceCategory(3),
-            )),
-          ],
+    if (!isMobile) {
+      // Grid layout for tablets and desktop
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: spacing,
+          mainAxisSpacing: spacing,
+          childAspectRatio: isTablet ? 1.2 : 1.1,
         ),
-      ],
-    );
+        itemCount: services.length,
+        itemBuilder: (context, index) {
+          final service = services[index];
+          return _serviceCard(
+            service['icon'] as IconData,
+            service['title'] as String,
+            service['description'] as String,
+            service['onTap'] as VoidCallback,
+            isMobile,
+            isTablet,
+          );
+        },
+      );
+    } else {
+      // Row layout for phones
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: topSpacing),
+          // First row
+          Row(
+            children: [
+              Expanded(child: _serviceCard(
+                services[0]['icon'] as IconData,
+                services[0]['title'] as String,
+                services[0]['description'] as String,
+                services[0]['onTap'] as VoidCallback,
+                isMobile,
+                isTablet,
+              )),
+              SizedBox(width: spacing),
+              Expanded(child: _serviceCard(
+                services[1]['icon'] as IconData,
+                services[1]['title'] as String,
+                services[1]['description'] as String,
+                services[1]['onTap'] as VoidCallback,
+                isMobile,
+                isTablet,
+              )),
+            ],
+          ),
+          SizedBox(height: spacing * 2), // Double the spacing to prevent overlap
+          // Second row
+          Row(
+            children: [
+              Expanded(child: _serviceCard(
+                services[2]['icon'] as IconData,
+                services[2]['title'] as String,
+                services[2]['description'] as String,
+                services[2]['onTap'] as VoidCallback,
+                isMobile,
+                isTablet,
+              )),
+              SizedBox(width: spacing),
+              Expanded(child: _serviceCard(
+                services[3]['icon'] as IconData,
+                services[3]['title'] as String,
+                services[3]['description'] as String,
+                services[3]['onTap'] as VoidCallback,
+                isMobile,
+                isTablet,
+              )),
+            ],
+          ),
+        ],
+      );
+    }
   }
 
   Widget _buildAnnouncementsBanner() {
-    return CarouselSlider.builder(
-      itemCount: controller.announcements.length,
-      itemBuilder: (context, index, realIndex) {
-        final announcement = controller.announcements[index];
-        return GestureDetector(
-          onTap: () => controller.navigateToNewsDetail(announcement),
-          child: Container(
-            width: kBannerWidth,
-            height: kBannerHeight,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              image: DecorationImage(
-                image: announcement.imageUrl != null
-                    ? AssetImage(announcement.imageUrl!)
-                    : const AssetImage("assets/images/news.jpg"),
-                fit: BoxFit.cover,
-                onError: (exception, stackTrace) {
-                  // Handle image loading errors gracefully
-                  debugPrint('Error loading image: $exception');
-                },
-              ),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              alignment: Alignment.bottomLeft,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bannerHeight = constraints.maxHeight;
+        final bannerWidth = constraints.maxWidth;
+
+        return CarouselSlider.builder(
+          itemCount: controller.announcements.length,
+          itemBuilder: (context, index, realIndex) {
+            final announcement = controller.announcements[index];
+            return GestureDetector(
+              onTap: () => controller.navigateToNewsDetail(announcement),
+              child: Container(
+                width: bannerWidth,
+                height: bannerHeight,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  image: DecorationImage(
+                    image: announcement.imageUrl != null
+                        ? AssetImage(announcement.imageUrl!)
+                        : const AssetImage("assets/images/news.jpg"),
+                    fit: BoxFit.cover,
+                    onError: (exception, stackTrace) {
+                      // Handle image loading errors gracefully
+                      debugPrint('Error loading image: $exception');
+                    },
+                  ),
                 ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    announcement.title,
-                    style: AppFonts.bodyText1Style.copyWith(
-                      color: Colors.white,
-                      fontWeight: AppFonts.bold,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  alignment: Alignment.bottomLeft,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
                     ),
                   ),
-                  if (announcement.description?.isNotEmpty ?? false)
-                    Text(
-                      announcement.description!,
-                      style: AppFonts.captionStyle.copyWith(
-                        color: Colors.white,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        announcement.title,
+                        style: AppFonts.bodyText1Style.copyWith(
+                          color: Colors.white,
+                          fontWeight: AppFonts.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
+                      if (announcement.description?.isNotEmpty ?? false)
+                        Text(
+                          announcement.description!,
+                          style: AppFonts.captionStyle.copyWith(
+                            color: Colors.white,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            );
+          },
+          options: CarouselOptions(
+            height: bannerHeight,
+            enlargeStrategy: CenterPageEnlargeStrategy.height,
+            autoPlay: true,
+            enlargeCenterPage: true,
+            viewportFraction: 1.0, // Full width within container
+            onPageChanged: (index, reason) {
+              // Update stepper indicator when page changes
+              controller.updateCurrentPage(index);
+            },
           ),
         );
       },
-      options: CarouselOptions(
-        height: kBannerHeight,
-        enlargeStrategy: CenterPageEnlargeStrategy.height,
-        autoPlay: true,
-        enlargeCenterPage: true,
-        viewportFraction: 1.0, // Full width within container
-        onPageChanged: (index, reason) {
-          // Update stepper indicator when page changes
-          controller.updateCurrentPage(index);
-        },
-      ),
     );
   }
 
-  Widget _buildStepperIndicator() {
+  Widget _buildStepperIndicator(bool isMobile, bool isTablet) {
+    final indicatorWidth = isMobile ? 24.0 : (isTablet ? 28.0 : 32.0);
+    final indicatorHeight = isMobile ? 4.0 : (isTablet ? 5.0 : 6.0);
+    final margin = isMobile ? 2.0 : (isTablet ? 3.0 : 4.0);
+
     return Obx(() => Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(
         controller.announcements.length,
         (index) => AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          width: 24, // Increased width for stretched rectangle
-          height: 4, // Reduced height for thin rectangle
-          margin: const EdgeInsets.symmetric(horizontal: 2),
+          width: indicatorWidth,
+          height: indicatorHeight,
+          margin: EdgeInsets.symmetric(horizontal: margin),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(2), // Small border radius for rectangle
+            borderRadius: BorderRadius.circular(indicatorHeight / 2),
             color: index == controller.currentPage.value
                 ? AppColors.primary
                 : Colors.grey[300],
@@ -341,81 +449,92 @@ class HomeView extends GetView<HomeController> {
     ));
   }
 
-  Widget _buildCheckStatusSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // "Enter Code" text above input field
-        Text(
-          'Enter Code',
-          style: AppFonts.captionStyle.copyWith(
-            fontWeight: AppFonts.medium,
-            color: AppColors.tertiary,
-          ),
-        ),
-        const SizedBox(height: 1),
+  Widget _buildCheckStatusSection(bool isMobile, bool isTablet) {
+    final fieldHeight = isMobile ? 36.0 : (isTablet ? 40.0 : 44.0);
+    final buttonSize = isMobile ? 40.0 : (isTablet ? 44.0 : 48.0);
+    final iconSize = isMobile ? 28.0 : (isTablet ? 30.0 : 32.0);
+    final fontSize = isMobile ? null : (isTablet ? 14.0 : 16.0);
+    final spacing = isMobile ? 1.0 : 2.0;
 
-        // Text field with trailing icon (full width)
-        Container(
-          width: double.infinity,
-
-          height: 36, // Reduced height
-          padding: const EdgeInsets.only(left: 10, right: 15),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.primary),
-            borderRadius: BorderRadius.circular(6), // Smaller radius
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'MB XXXXXXXX ET',
-                    hintStyle: AppFonts.bodyText2Style.copyWith(
-                      color: Colors.black54,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10), // Reduced padding
-                  ),
+    return Container(
+      width: double.infinity,
+      height: fieldHeight,
+      padding: EdgeInsets.only(
+        left: isMobile ? 10 : (isTablet ? 12 : 15),
+        right: isMobile ? 15 : (isTablet ? 18 : 20),
+      ),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.primary),
+        borderRadius: BorderRadius.circular(isMobile ? 6 : (isTablet ? 8 : 10)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              cursorHeight: 10.0,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                labelText: 'Enter Code',
+                labelStyle: AppFonts.captionStyle.copyWith(
+                  fontWeight: AppFonts.medium,
+                  color: AppColors.tertiary,
+                  fontSize: fontSize,
                 ),
+                hintText: 'MB XXXXXXXX ET',
+                hintStyle: AppFonts.bodyText2Style.copyWith(
+                  color: Colors.black54,
+                  fontSize: 10.0,
+                ),
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
               ),
-              Container(
-                width: 40, // 40px width
-                height: 40, // 40px height
-                margin: const EdgeInsets.only(left: 8), // Move to the right
-                decoration: BoxDecoration(
-                  color: Colors.white, // Gray background
-                  borderRadius: BorderRadius.circular(100), // 100px border radius for full circle
-                ),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: Icon(
-                    Icons.search,
-                    color: AppColors.primary,
-                    size: 28, // Adjusted icon size for larger button
-                  ),
-                  onPressed: () {
-                    // Handle check status action
-                  },
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ],
+          Container(
+            width: buttonSize,
+            height: buttonSize,
+            margin: EdgeInsets.only(left: isMobile ? 8 : (isTablet ? 10 : 12)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(buttonSize / 2),
+            ),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: Icon(
+                Icons.search,
+                color: AppColors.primary,
+                size: iconSize,
+              ),
+              onPressed: () {
+                // Handle check status action
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _serviceCard(IconData icon, String title, String description, VoidCallback onTap) {
+  Widget _serviceCard(IconData icon, String title, String description, VoidCallback onTap, bool isMobile, bool isTablet) {
+    final iconSize = isMobile ? 20.0 : (isTablet ? 24.0 : 28.0);
+    final iconContainerSize = isMobile ? 40.0 : (isTablet ? 48.0 : 56.0);
+    final padding = isMobile ? 12.0 : (isTablet ? 16.0 : 20.0);
+    final margin = isMobile ? 5.0 : (isTablet ? 6.0 : 8.0);
+    final titlePadding = isMobile ? 8.0 : (isTablet ? 10.0 : 12.0);
+    final spacing = isMobile ? 8.0 : (isTablet ? 10.0 : 12.0);
+    final minHeight = isMobile ? 140.0 : (isTablet ? 160.0 : 180.0);
+    final fontSize = isMobile ? null : (isTablet ? 14.0 : 16.0);
+    final descriptionFontSize = isMobile ? null : (isTablet ? 12.0 : 14.0);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         constraints: BoxConstraints(
-          minHeight: 140, // Minimum height
-          maxHeight: double.infinity, // Allow dynamic height
+          minHeight: minHeight,
+          maxHeight: double.infinity,
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 5),
+        margin: EdgeInsets.symmetric(horizontal: margin),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -428,17 +547,17 @@ class HomeView extends GetView<HomeController> {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(padding),
           child: Stack(
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 40), // Space for icon
+                  SizedBox(height: iconContainerSize), // Space for icon
                   // Title
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: EdgeInsets.symmetric(horizontal: titlePadding, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0),
                       borderRadius: BorderRadius.circular(6),
@@ -449,23 +568,25 @@ class HomeView extends GetView<HomeController> {
                         fontWeight: AppFonts.semiBold,
                         color: AppColors.primary,
                         height: 1.2,
+                        fontSize: fontSize,
                       ),
                       textAlign: TextAlign.left,
                       maxLines: 2,
                       overflow: TextOverflow.visible,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: spacing),
                   // Description
                   Text(
                     description,
                     style: AppFonts.overlineStyle.copyWith(
                       color: Colors.grey[600],
                       height: 1.3,
+                      fontSize: descriptionFontSize,
                     ),
                     textAlign: TextAlign.left,
-                    maxLines: 10, // Allow more lines
-                    overflow: TextOverflow.visible, // Show all text
+                    maxLines: 10,
+                    overflow: TextOverflow.visible,
                   ),
                 ],
               ),
@@ -474,13 +595,13 @@ class HomeView extends GetView<HomeController> {
                 top: 0,
                 left: 0,
                 child: Container(
-                  width: 40,
-                  height: 40,
+                  width: iconContainerSize,
+                  height: iconContainerSize,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: AppColors.primary, size: 20),
+                  child: Icon(icon, color: AppColors.primary, size: iconSize),
                 ),
               ),
             ],

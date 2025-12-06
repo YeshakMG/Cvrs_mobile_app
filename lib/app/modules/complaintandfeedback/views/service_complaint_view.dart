@@ -25,105 +25,119 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Determine device type
+            final isMobile = constraints.maxWidth < 600;
+            final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
 
-              /// Service Type Dropdown
-              Text(
-                'Select Service Type',
-                style: AppFonts.bodyText1Style.copyWith(
-                  fontWeight: AppFonts.semiBold,
-                  color: AppColors.primary,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Obx(
-                () => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButton<String>(
-                    value: controller.selectedServiceType.value.isEmpty
-                        ? null
-                        : controller.selectedServiceType.value,
-                    isExpanded: true,
-                    underline: const SizedBox(),
-                    hint: const Text(
-                      'Services',
-                      style: TextStyle(fontSize: 14),
+            // Responsive dimensions
+            final horizontalPadding = isMobile ? 16.0 : (isTablet ? 24.0 : 32.0);
+            final verticalSpacing = isMobile ? 10.0 : (isTablet ? 12.0 : 16.0);
+            final sectionSpacing = isMobile ? 8.0 : (isTablet ? 12.0 : 16.0);
+            final fieldPadding = isMobile ? 12.0 : (isTablet ? 16.0 : 20.0);
+            final fontSize = isMobile ? 14.0 : (isTablet ? 16.0 : 18.0);
+            final iconSize = isMobile ? 20.0 : (isTablet ? 24.0 : 28.0);
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(horizontalPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: verticalSpacing),
+
+                  /// Service Type Dropdown
+                  Text(
+                    'Select Service Type',
+                    style: AppFonts.bodyText1Style.copyWith(
+                      fontWeight: AppFonts.semiBold,
+                      color: AppColors.primary,
+                      fontSize: fontSize,
                     ),
-                    items: controller.serviceTypes.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          value,
-                          style: const TextStyle(fontSize: 14),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Obx(
+                    () => Container(
+                      padding: EdgeInsets.symmetric(horizontal: fieldPadding),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.primary),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButton<String>(
+                        value: controller.selectedServiceType.value.isEmpty
+                            ? null
+                            : controller.selectedServiceType.value,
+                        isExpanded: true,
+                        underline: const SizedBox(),
+                        hint: Text(
+                          'Services',
+                          style: TextStyle(fontSize: fontSize),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        controller.selectedServiceType.value = newValue;
-                      }
-                    },
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              /// Branch Dropdown
-              Text(
-                'Branch',
-                style: AppFonts.bodyText1Style.copyWith(
-                  fontWeight: AppFonts.semiBold,
-                  color: AppColors.primary,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Obx(
-                () => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButton<String>(
-                    value: controller.selectedBranch.value.isEmpty
-                        ? null
-                        : controller.selectedBranch.value,
-                    isExpanded: true,
-                    underline: const SizedBox(),
-                    hint: const Text(
-                      'Select Branch',
-                      style: TextStyle(fontSize: 14),
+                        items: controller.serviceTypes.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(
+                              value,
+                              style: TextStyle(fontSize: fontSize),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            controller.selectedServiceType.value = newValue;
+                          }
+                        },
+                      ),
                     ),
-                    items: controller.branches.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          value,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      controller.selectedBranch.value = newValue!;
-                      controller.updateSubBranchOptions();
-                    },
                   ),
-                ),
-              ),
 
-              const SizedBox(height: 24),
+                  SizedBox(height: verticalSpacing),
+
+                  /// Branch Dropdown
+                  Text(
+                    'Branch',
+                    style: AppFonts.bodyText1Style.copyWith(
+                      fontWeight: AppFonts.semiBold,
+                      color: AppColors.primary,
+                      fontSize: fontSize,
+                    ),
+                  ),
+                  SizedBox(height: sectionSpacing),
+                  Obx(
+                    () => Container(
+                      padding: EdgeInsets.symmetric(horizontal: fieldPadding),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.primary),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButton<String>(
+                        value: controller.selectedBranch.value.isEmpty
+                            ? null
+                            : controller.selectedBranch.value,
+                        isExpanded: true,
+                        underline: const SizedBox(),
+                        hint: Text(
+                          'Select Branch',
+                          style: TextStyle(fontSize: fontSize),
+                        ),
+                        items: controller.branches.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(
+                              value,
+                              style: TextStyle(fontSize: fontSize),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          controller.selectedBranch.value = newValue!;
+                          controller.updateSubBranchOptions();
+                        },
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: verticalSpacing * 2),
 
               /// Sub-Branch Section
               Obx(() {
@@ -140,17 +154,19 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                       style: AppFonts.bodyText1Style.copyWith(
                         fontWeight: AppFonts.semiBold,
                         color: AppColors.primary,
-                        fontSize: 14,
+                        fontSize: fontSize,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: sectionSpacing),
                     ...subBranchList.map(
                       (subBranch) => InkWell(
-                        onTap: () =>
-                            controller.selectedSubBranch.value = subBranch,
+                        onTap: () {
+                          controller.selectedSubBranch.value = subBranch;
+                          controller.updateWoredaOptions();
+                        },
                         child: Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(16),
+                          margin: EdgeInsets.only(bottom: sectionSpacing),
+                          padding: EdgeInsets.all(fieldPadding),
                           decoration: BoxDecoration(
                             color: controller.selectedSubBranch.value ==
                                     subBranch
@@ -172,9 +188,9 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                                         subBranch
                                     ? AppColors.primary
                                     : AppColors.primary.withOpacity(0.6),
-                                size: 20,
+                                size: iconSize,
                               ),
-                              const SizedBox(width: 12),
+                              SizedBox(width: sectionSpacing),
                               Expanded(
                                 child: Text(
                                   subBranch,
@@ -192,24 +208,99 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                                   ),
                                 ),
                               ),
-                              if (controller.selectedSubBranch.value ==
-                                  subBranch)
+                              ... (controller.selectedSubBranch.value ==
+                                  subBranch ? [Icon(
+                                Icons.check_circle,
+                                color: AppColors.primary,
+                                size: iconSize,
+                              )] : []),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: verticalSpacing * 2),
+                  ],
+                );
+              }),
+
+              /// Woreda Section
+              Obx(() {
+                final woredaList =
+                    controller.woredas[controller.selectedSubBranch.value] ??
+                        [];
+                if (woredaList.isEmpty) return const SizedBox.shrink();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Select Woreda',
+                      style: AppFonts.bodyText1Style.copyWith(
+                        fontWeight: AppFonts.semiBold,
+                        color: AppColors.primary,
+                        fontSize: fontSize,
+                      ),
+                    ),
+                    SizedBox(height: sectionSpacing),
+                    ...woredaList.map(
+                      (woreda) => InkWell(
+                        onTap: () =>
+                            controller.selectedWoreda.value = woreda,
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: sectionSpacing),
+                          padding: EdgeInsets.all(fieldPadding),
+                          decoration: BoxDecoration(
+                            color: controller.selectedWoreda.value == woreda
+                                ? AppColors.primary.withOpacity(0.1)
+                                : Colors.white,
+                            border: Border.all(
+                              color: controller.selectedWoreda.value == woreda
+                                  ? AppColors.primary
+                                  : AppColors.primary.withOpacity(0.3),
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.location_city,
+                                color: controller.selectedWoreda.value == woreda
+                                    ? AppColors.primary
+                                    : AppColors.primary.withOpacity(0.6),
+                                size: iconSize,
+                              ),
+                              SizedBox(width: sectionSpacing),
+                              Expanded(
+                                child: Text(
+                                  woreda,
+                                  style: AppFonts.bodyText2Style.copyWith(
+                                    color: controller.selectedWoreda.value ==
+                                            woreda
+                                        ? AppColors.primary
+                                        : AppColors.textPrimary,
+                                    fontWeight: controller.selectedWoreda.value ==
+                                            woreda
+                                        ? AppFonts.medium
+                                        : AppFonts.regular,
+                                  ),
+                                ),
+                              ),
+                              if (controller.selectedWoreda.value == woreda)
                                 Icon(
                                   Icons.check_circle,
                                   color: AppColors.primary,
-                                  size: 20,
+                                  size: iconSize,
                                 ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: verticalSpacing * 2),
                   ],
                 );
               }),
-
-              const SizedBox(height: 2),
 
               /// Description Field
               Text(
@@ -217,19 +308,17 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                 style: AppFonts.bodyText1Style.copyWith(
                   fontWeight: AppFonts.semiBold,
                   color: AppColors.primary,
-                  fontSize: 14,
+                  fontSize: fontSize,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: sectionSpacing),
               TextField(
                 controller: controller.descriptionController,
                 maxLength: 100,
                 maxLines: 4,
                 decoration: InputDecoration(
-                                      hint: const Text(
-                      'Type your complaint here...',
-                      style: TextStyle(fontSize: 14),
-                    ),
+                  hintText: 'Type your complaint here...',
+                  hintStyle: TextStyle(fontSize: fontSize),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(color: AppColors.primary),
@@ -244,7 +333,7 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                 ),
               ),
 
-              const SizedBox(height: 4),
+              SizedBox(height: sectionSpacing),
 
               /// Attachments
               Text(
@@ -252,14 +341,14 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                 style: AppFonts.bodyText1Style.copyWith(
                   fontWeight: AppFonts.semiBold,
                   color: AppColors.primary,
-                  fontSize: 14,
+                  fontSize: fontSize,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: sectionSpacing),
               InkWell(
                 onTap: controller.pickAttachment,
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(fieldPadding),
                   decoration: BoxDecoration(
                     border: Border.all(color: AppColors.primary),
                     borderRadius: BorderRadius.circular(8),
@@ -269,14 +358,14 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                       Icon(
                         Icons.attach_file,
                         color: AppColors.primary,
-                        size: 24,
+                        size: iconSize,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: sectionSpacing),
                       Expanded(
                         child: Obx(
                           () => Text(
                             controller.selectedFileName.value.isEmpty
-                                ? ''
+                                ? 'Tap to attach file'
                                 : controller.selectedFileName.value,
                             style: AppFonts.bodyText2Style.copyWith(
                               color:
@@ -292,7 +381,7 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                 ),
               ),
 
-              const SizedBox(height: 40),
+              SizedBox(height: verticalSpacing * 4),
 
               /// Submit Button
               SizedBox(
@@ -301,7 +390,7 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                   onPressed: controller.submitComplaint,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(vertical: fieldPadding),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -311,16 +400,18 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                     style: AppFonts.bodyText1Style.copyWith(
                       fontWeight: AppFonts.regular,
                       color: Colors.white,
-                      fontSize: 14,
+                      fontSize: fontSize,
                     ),
                   ),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-      bottomNavigationBar: const BottomNavigationWidget(),
-    );
+        );
+      },
+    ),
+  ),
+  bottomNavigationBar: const BottomNavigationWidget(),
+);
   }
 }

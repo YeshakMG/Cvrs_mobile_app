@@ -13,60 +13,85 @@ class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Complaint Type',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-          ),
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+            final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
+            final fontSize = isMobile ? 16.0 : (isTablet ? 18.0 : 20.0);
+            return Text(
+              'Complaint Type',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+              ),
+            );
+          },
         ),
         centerTitle: false,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 32),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+            final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
 
-              // Short Description
-              Text(
-                'Select whether your concern relates to the service experience or the expert’s performance.',
-                style: AppFonts.bodyText1Style.copyWith(
-                  fontWeight: AppFonts.regular,
-                  color: AppColors.primary,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 24),
+            // Responsive dimensions
+            final padding = isMobile ? 16.0 : (isTablet ? 24.0 : 32.0);
+            final topSpacing = isMobile ? 32.0 : (isTablet ? 40.0 : 48.0);
+            final descriptionFontSize = isMobile ? 12.0 : (isTablet ? 14.0 : 16.0);
+            final spacing = isMobile ? 24.0 : (isTablet ? 28.0 : 32.0);
+            final cardSpacing = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
 
-              // Service and Expert Cards side by side
-              Row(
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: _buildOptionCard(
-                      context,
-                      'Service',
-                      Icons.miscellaneous_services_rounded,
-                      () => controller.selectComplaintType('service'),
+                  SizedBox(height: topSpacing),
+
+                  // Short Description
+                  Text(
+                    'Select whether your concern relates to the service experience or the expert\'s performance.',
+                    style: AppFonts.bodyText1Style.copyWith(
+                      fontWeight: AppFonts.regular,
+                      color: AppColors.primary,
+                      fontSize: descriptionFontSize,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildOptionCard(
-                      context,
-                      'Expert',
-                      Icons.person_outline_rounded,
-                      () => controller.selectComplaintType('expert'),
-                    ),
+                  SizedBox(height: spacing),
+
+                  // Service and Expert Cards side by side
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildOptionCard(
+                          context,
+                          'Service',
+                          Icons.miscellaneous_services_rounded,
+                          () => controller.selectComplaintType('service'),
+                          isMobile,
+                          isTablet,
+                        ),
+                      ),
+                      SizedBox(width: cardSpacing),
+                      Expanded(
+                        child: _buildOptionCard(
+                          context,
+                          'Expert',
+                          Icons.person_outline_rounded,
+                          () => controller.selectComplaintType('expert'),
+                          isMobile,
+                          isTablet,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
       bottomNavigationBar: const BottomNavigationWidget(),
@@ -78,14 +103,23 @@ class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
     String title,
     IconData icon,
     VoidCallback onTap,
+    bool isMobile,
+    bool isTablet,
   ) {
+    final cardWidth = isMobile ? 170.0 : (isTablet ? 200.0 : 230.0);
+    final cardHeight = isMobile ? 114.0 : (isTablet ? 130.0 : 150.0);
+    final padding = isMobile ? 20.0 : (isTablet ? 24.0 : 28.0);
+    final iconSize = isMobile ? 28.0 : (isTablet ? 32.0 : 36.0);
+    final spacing = isMobile ? 12.0 : (isTablet ? 14.0 : 16.0);
+    final fontSize = isMobile ? 14.0 : (isTablet ? 16.0 : 18.0);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        width: 170,
-        height: 114,
-        padding: const EdgeInsets.all(20),
+        width: cardWidth,
+        height: cardHeight,
+        padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -109,15 +143,15 @@ class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
             Icon(
               icon,
               color: AppColors.primary,
-              size: 28,
+              size: iconSize,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: spacing),
             Text(
               title,
               style: AppFonts.bodyText1Style.copyWith(
                 fontWeight: AppFonts.semiBold,
                 color: AppColors.primary,
-                fontSize: 14,
+                fontSize: fontSize,
               ),
               textAlign: TextAlign.left,
             ),

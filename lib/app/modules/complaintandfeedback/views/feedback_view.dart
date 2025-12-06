@@ -28,13 +28,28 @@ class FeedbackView extends GetView<FeedbackController> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+            final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
+
+            // Responsive dimensions
+            final padding = isMobile ? 16.0 : (isTablet ? 24.0 : 32.0);
+            final scanButtonWidth = isMobile ? 250.0 : (isTablet ? 300.0 : 350.0);
+            final scanButtonPadding = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
+            final scanIconSize = isMobile ? 32.0 : (isTablet ? 36.0 : 40.0);
+            final fontSize = isMobile ? 14.0 : (isTablet ? 16.0 : 18.0);
+            final spacing = isMobile ? 12.0 : (isTablet ? 16.0 : 20.0);
+            final cardPadding = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
+            final starSize = isMobile ? 36.0 : (isTablet ? 40.0 : 44.0);
+            final buttonPadding = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
+            final buttonHeight = isMobile ? 48.0 : (isTablet ? 52.0 : 56.0);
+
             return SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Obx(() {
                   return IntrinsicHeight(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      padding: EdgeInsets.symmetric(horizontal: padding),
                       child: Column(
                         mainAxisAlignment: controller.expertName.isEmpty
                             ? MainAxisAlignment.center
@@ -51,17 +66,17 @@ class FeedbackView extends GetView<FeedbackController> {
                                   style: AppFonts.bodyText1Style.copyWith(
                                     fontWeight: AppFonts.regular,
                                     color: AppColors.primary,
-                                    fontSize: 14,
+                                    fontSize: fontSize,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: spacing),
                                 InkWell(
                                   onTap: controller.startScanning,
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16, horizontal: 30),
-                                    width: 250,
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: scanButtonPadding, horizontal: scanButtonPadding * 1.875), // 30/16 = 1.875
+                                    width: scanButtonWidth,
                                     decoration: BoxDecoration(
                                       border: Border.all(color: AppColors.primary),
                                       borderRadius: BorderRadius.circular(8),
@@ -72,13 +87,14 @@ class FeedbackView extends GetView<FeedbackController> {
                                         Icon(
                                           Icons.qr_code_scanner,
                                           color: AppColors.primary,
-                                          size: 32,
+                                          size: scanIconSize,
                                         ),
-                                        const SizedBox(width: 12),
+                                        SizedBox(width: spacing),
                                         Text(
                                           'Scan QR Code',
                                           style: AppFonts.bodyText2Style.copyWith(
                                             color: AppColors.primary,
+                                            fontSize: fontSize,
                                           ),
                                         ),
                                       ],
@@ -99,10 +115,10 @@ class FeedbackView extends GetView<FeedbackController> {
                                   ),
                                   elevation: 4,
                                   child: Padding(
-                                    padding: const EdgeInsets.all(16),
+                                    padding: EdgeInsets.all(cardPadding),
                                     child: Obx(() {
                                       if (controller.isLoading.value && controller.expertName.isEmpty) {
-                                        return _buildExpertDetailsShimmer();
+                                        return _buildExpertDetailsShimmer(isMobile, isTablet);
                                       }
                                       return Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,24 +128,24 @@ class FeedbackView extends GetView<FeedbackController> {
                                             style: AppFonts.bodyText1Style.copyWith(
                                               fontWeight: AppFonts.semiBold,
                                               color: AppColors.primary,
-                                              fontSize: 14,
+                                              fontSize: fontSize,
                                             ),
                                           ),
-                                          const SizedBox(height: 12),
+                                          SizedBox(height: spacing),
                                           _buildDetailRow(
-                                              'Name', controller.expertName.value),
+                                              'Name', controller.expertName.value, isMobile, isTablet),
                                           _buildDetailRow('Position',
-                                              controller.expertPosition.value),
+                                              controller.expertPosition.value, isMobile, isTablet),
                                           _buildDetailRow('Department',
-                                              controller.expertDepartment.value),
+                                              controller.expertDepartment.value, isMobile, isTablet),
                                           _buildDetailRow('Branch',
-                                              controller.expertBranch.value),
+                                              controller.expertBranch.value, isMobile, isTablet),
                                         ],
                                       );
                                     }),
                                   ),
                                 ),
-                                const SizedBox(height: 20),
+                                SizedBox(height: spacing * 1.25), // 20/16 = 1.25
 
                                 // Rating section
                                 Text(
@@ -137,10 +153,10 @@ class FeedbackView extends GetView<FeedbackController> {
                                   style: AppFonts.bodyText1Style.copyWith(
                                     fontWeight: AppFonts.semiBold,
                                     color: AppColors.primary,
-                                    fontSize: 14,
+                                    fontSize: fontSize,
                                   ),
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: spacing),
                                 Obx(() => Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceEvenly,
@@ -157,12 +173,12 @@ class FeedbackView extends GetView<FeedbackController> {
                                             color: isSelected
                                                 ? Colors.amber
                                                 : Colors.grey,
-                                            size: 36,
+                                            size: starSize,
                                           ),
                                         );
                                       }),
                                     )),
-                                const SizedBox(height: 24),
+                                SizedBox(height: spacing * 2),
 
                                 // Terms checkbox
                                 Obx(() => Row(
@@ -179,19 +195,20 @@ class FeedbackView extends GetView<FeedbackController> {
                                             style:
                                                 AppFonts.bodyText2Style.copyWith(
                                               color: AppColors.textPrimary,
+                                              fontSize: fontSize,
                                             ),
                                           ),
                                         ),
                                       ],
                                     )),
-                                const SizedBox(height: 24),
+                                SizedBox(height: spacing * 2),
 
                                 // Submit button
                                 Obx(() {
                                   if (controller.isLoading.value) {
                                     return SizedBox(
                                       width: double.infinity,
-                                      height: 48,
+                                      height: buttonHeight,
                                       child: Shimmer.fromColors(
                                         baseColor: AppColors.primary.withOpacity(0.3),
                                         highlightColor: AppColors.primary.withOpacity(0.7),
@@ -210,7 +227,7 @@ class FeedbackView extends GetView<FeedbackController> {
                                       onPressed: controller.submitFeedback,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: AppColors.primary,
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        padding: EdgeInsets.symmetric(vertical: buttonPadding),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(8),
                                         ),
@@ -219,7 +236,7 @@ class FeedbackView extends GetView<FeedbackController> {
                                         'Submit Feedback',
                                         style: AppFonts.bodyText1Style.copyWith(
                                           color: Colors.white,
-                                          fontSize: 14,
+                                          fontSize: fontSize,
                                         ),
                                       ),
                                     ),
@@ -241,19 +258,24 @@ class FeedbackView extends GetView<FeedbackController> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, bool isMobile, bool isTablet) {
+    final labelWidth = isMobile ? 120.0 : (isTablet ? 140.0 : 160.0);
+    final padding = isMobile ? 8.0 : (isTablet ? 10.0 : 12.0);
+    final fontSize = isMobile ? null : (isTablet ? 14.0 : 16.0);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: padding),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: labelWidth,
             child: Text(
               '$label:',
               style: AppFonts.bodyText2Style.copyWith(
                 fontWeight: AppFonts.medium,
                 color: AppColors.textPrimary,
+                fontSize: fontSize,
               ),
             ),
           ),
@@ -263,6 +285,7 @@ class FeedbackView extends GetView<FeedbackController> {
               style: AppFonts.bodyText2Style.copyWith(
                 color: AppColors.primary,
                 fontWeight: AppFonts.semiBold,
+                fontSize: fontSize,
               ),
             ),
           ),
@@ -271,7 +294,16 @@ class FeedbackView extends GetView<FeedbackController> {
     );
   }
 
-  Widget _buildExpertDetailsShimmer() {
+  Widget _buildExpertDetailsShimmer(bool isMobile, bool isTablet) {
+    final titleWidth = isMobile ? 120.0 : (isTablet ? 140.0 : 160.0);
+    final titleHeight = isMobile ? 16.0 : (isTablet ? 18.0 : 20.0);
+    final spacing = isMobile ? 12.0 : (isTablet ? 14.0 : 16.0);
+    final labelWidth = isMobile ? 80.0 : (isTablet ? 90.0 : 100.0);
+    final labelHeight = isMobile ? 14.0 : (isTablet ? 16.0 : 18.0);
+    final valueWidth = isMobile ? 120.0 : (isTablet ? 140.0 : 160.0);
+    final valueHeight = labelHeight;
+    final padding = isMobile ? 8.0 : (isTablet ? 10.0 : 12.0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -280,20 +312,20 @@ class FeedbackView extends GetView<FeedbackController> {
           baseColor: Colors.grey[300]!,
           highlightColor: Colors.grey[100]!,
           child: Container(
-            width: 120,
-            height: 16,
+            width: titleWidth,
+            height: titleHeight,
             decoration: BoxDecoration(
               color: Colors.grey[300],
               borderRadius: BorderRadius.circular(4),
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        
+        SizedBox(height: spacing),
+
         // Detail rows shimmer
         for (int i = 0; i < 4; i++) ...[
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.only(bottom: padding),
             child: Row(
               children: [
                 // Label shimmer
@@ -301,22 +333,22 @@ class FeedbackView extends GetView<FeedbackController> {
                   baseColor: Colors.grey[300]!,
                   highlightColor: Colors.grey[100]!,
                   child: Container(
-                    width: 80,
-                    height: 14,
+                    width: labelWidth,
+                    height: labelHeight,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                 ),
-                const SizedBox(width: 20),
+                SizedBox(width: isMobile ? 20 : 24),
                 // Value shimmer
                 Shimmer.fromColors(
                   baseColor: Colors.grey[300]!,
                   highlightColor: Colors.grey[100]!,
                   child: Container(
-                    width: 120,
-                    height: 14,
+                    width: valueWidth,
+                    height: valueHeight,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(4),

@@ -14,70 +14,94 @@ class ComplaintandfeedbackView extends GetView<ComplaintandfeedbackController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Complaint & Feedback',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-          ),
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+            final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
+            final fontSize = isMobile ? 16.0 : (isTablet ? 18.0 : 20.0);
+            return Text(
+              'Complaint & Feedback',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+              ),
+            );
+          },
         ),
         centerTitle: false,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+            final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
 
-              // Description Text
-              const Text(
-                'Share your complaints or feedback about the services received and the experts who assisted you. Your input helps us improve our service quality and accountability.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.left,
-              ),
-              const SizedBox(height: 20),
+            final padding = isMobile ? 16.0 : (isTablet ? 24.0 : 32.0);
+            final descriptionFontSize = isMobile ? 12.0 : (isTablet ? 14.0 : 16.0);
+            final spacing = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
 
-              // Complaint and Feedback Cards side by side
-              Row(
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        // Complaint Card
-                        _buildOptionCard(
-                          context,
-                          'Complaint',
-                          HugeIcons.strokeRoundedComplaint,
-                          () => controller.selectOption('complaint'),
-                        ),
-                      ],
+                  SizedBox(height: constraints.maxHeight * 0.05),
+
+                  // Description Text
+                  Text(
+                    'Share your complaints or feedback about the services received and the experts who assisted you. Your input helps us improve our service quality and accountability.',
+                    style: TextStyle(
+                      fontSize: descriptionFontSize,
+                      color: Colors.black,
                     ),
+                    textAlign: TextAlign.left,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        // Feedback Card
-                        _buildOptionCard(
-                          context,
-                          'Feedback',
-                          Icons.feedback,
-                          () => controller.selectOption('feedback'),
+                  SizedBox(height: spacing),
+
+                  // Complaint and Feedback Cards side by side
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            // Complaint Card
+                            _buildOptionCard(
+                              context,
+                              'Complaint',
+                              HugeIcons.strokeRoundedComplaint,
+                              () => controller.selectOption('complaint'),
+                              constraints,
+                              isMobile,
+                              isTablet,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(width: spacing),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            // Feedback Card
+                            _buildOptionCard(
+                              context,
+                              'Feedback',
+                              Icons.feedback,
+                              () => controller.selectOption('feedback'),
+                              constraints,
+                              isMobile,
+                              isTablet,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
       bottomNavigationBar: const BottomNavigationWidget(),
@@ -89,14 +113,23 @@ class ComplaintandfeedbackView extends GetView<ComplaintandfeedbackController> {
     String title,
     IconData icon,
     VoidCallback onTap,
+    BoxConstraints constraints,
+    bool isMobile,
+    bool isTablet,
   ) {
+    final cardWidth = (constraints.maxWidth - (isMobile ? 32 : (isTablet ? 48 : 64))) / 2;
+    final cardHeight = cardWidth * 0.67; // Maintain aspect ratio
+    final iconSize = isMobile ? 28.0 : (isTablet ? 32.0 : 36.0);
+    final fontSize = isMobile ? 14.0 : (isTablet ? 16.0 : 18.0);
+    final padding = isMobile ? 20.0 : (isTablet ? 24.0 : 28.0);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        width: 170,
-        height: 114,
-        padding: const EdgeInsets.all(20),
+        width: cardWidth,
+        height: cardHeight,
+        padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -112,23 +145,22 @@ class ComplaintandfeedbackView extends GetView<ComplaintandfeedbackController> {
             ),
           ],
         ),
-        child: Wrap(
-          direction: Axis.vertical,
-          alignment: WrapAlignment.start,
-          crossAxisAlignment: WrapCrossAlignment.start,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
               icon,
               color: AppColors.primary,
-              size: 28,
+              size: iconSize,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: isMobile ? 12 : 16),
             Text(
               title,
               style: AppFonts.bodyText1Style.copyWith(
                 fontWeight: AppFonts.semiBold,
                 color: AppColors.primary,
-                fontSize: 14,
+                fontSize: fontSize,
               ),
               textAlign: TextAlign.left,
             ),

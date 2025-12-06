@@ -10,44 +10,56 @@ class BottomNavigationWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final BottomNavigationController controller = Get.find<BottomNavigationController>();
-    return Obx(() => BottomNavigationBar(
-          currentIndex: controller.selectedIndex.value,
-          onTap: controller.changeTab,
-          backgroundColor: AppColors.primary,
-          selectedItemColor: AppColors.fourth,
-          unselectedItemColor: Colors.white,
-          selectedLabelStyle: AppFonts.bodyText2Style.copyWith(
-            color: AppColors.fourth,
-            fontWeight: AppFonts.medium,
-          ),
-          unselectedLabelStyle: AppFonts.captionStyle.copyWith(
-            color: Colors.white,
-          ),
-          type: BottomNavigationBarType.fixed,
-          items: [
-            BottomNavigationBarItem(
-              icon: controller.selectedIndex.value == 0
-                  ? Image.asset('assets/images/homeicon.png', width: 24, height: 20, color: AppColors.fourth)
-                  : Image.asset('assets/images/homeicon.png', width: 24, height: 20, color: Colors.white),
-              label: 'Home',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.badge),
-              label: 'My ID',
-            ),
-            BottomNavigationBarItem(
-              icon: controller.selectedIndex.value == 2
-                  ? Image.asset('assets/images/authenticate.png', width: 24, height: 20, color: AppColors.fourth)
-                  : Image.asset('assets/images/authenticate.png', width: 24, height: 20, color: Colors.white),
-              label: 'Authenticate',
-            ),
-            BottomNavigationBarItem(
-              icon: controller.selectedIndex.value == 3
-                  ? Image.asset('assets/images/settingsicon.png', width: 24, height: 20, color: AppColors.fourth)
-                  : Image.asset('assets/images/settingsicon.png', width: 24, height: 20, color: Colors.white),
-              label: 'Settings',
-            ),
-          ],
-        ));
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+        final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
+
+        final iconSize = isMobile ? 20.0 : (isTablet ? 24.0 : 28.0);
+        final fontSize = isMobile ? null : (isTablet ? 12.0 : 14.0);
+
+        return Obx(() => BottomNavigationBar(
+              currentIndex: controller.selectedIndex.value,
+              onTap: controller.changeTab,
+              backgroundColor: AppColors.primary,
+              selectedItemColor: AppColors.fourth,
+              unselectedItemColor: Colors.white,
+              selectedLabelStyle: AppFonts.bodyText2Style.copyWith(
+                color: AppColors.fourth,
+                fontWeight: AppFonts.medium,
+                fontSize: fontSize,
+              ),
+              unselectedLabelStyle: AppFonts.captionStyle.copyWith(
+                color: Colors.white,
+                fontSize: fontSize,
+              ),
+              type: BottomNavigationBarType.fixed,
+              items: [
+                BottomNavigationBarItem(
+                  icon: controller.selectedIndex.value == 0
+                      ? Image.asset('assets/images/homeicon.png', width: iconSize, height: iconSize * 0.83, color: AppColors.fourth)
+                      : Image.asset('assets/images/homeicon.png', width: iconSize, height: iconSize * 0.83, color: Colors.white),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.badge, size: iconSize),
+                  label: 'My ID',
+                ),
+                BottomNavigationBarItem(
+                  icon: controller.selectedIndex.value == 2
+                      ? Image.asset('assets/images/authenticate.png', width: iconSize, height: iconSize * 0.83, color: AppColors.fourth)
+                      : Image.asset('assets/images/authenticate.png', width: iconSize, height: iconSize * 0.83, color: Colors.white),
+                  label: 'Authenticate',
+                ),
+                BottomNavigationBarItem(
+                  icon: controller.selectedIndex.value == 3
+                      ? Image.asset('assets/images/settingsicon.png', width: iconSize, height: iconSize * 0.83, color: AppColors.fourth)
+                      : Image.asset('assets/images/settingsicon.png', width: iconSize, height: iconSize * 0.83, color: Colors.white),
+                  label: 'Settings',
+                ),
+              ],
+            ));
+      },
+    );
   }
 }
