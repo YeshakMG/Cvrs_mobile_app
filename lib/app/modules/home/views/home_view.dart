@@ -253,12 +253,12 @@ class HomeView extends GetView<HomeController> {
         'description': 'Download and verify digital documents',
         'onTap': () => controller.selectServiceCategory(2),
       },
-      {
-        'icon': Icons.feedback,
-        'title': 'Complaint & Feedback',
-        'description': 'Submit complaints and provide feedback',
-        'onTap': () => controller.selectServiceCategory(3),
-      },
+      // {
+      //   'icon': Icons.feedback,
+      //   'title': 'Complaint & Feedback',
+      //   'description': 'Submit complaints and provide feedback',
+      //   'onTap': () => controller.selectServiceCategory(3),
+      // },
     ];
 
     if (!isMobile) {
@@ -322,15 +322,6 @@ class HomeView extends GetView<HomeController> {
                 services[2]['title'] as String,
                 services[2]['description'] as String,
                 services[2]['onTap'] as VoidCallback,
-                isMobile,
-                isTablet,
-              )),
-              SizedBox(width: spacing),
-              Expanded(child: _serviceCard(
-                services[3]['icon'] as IconData,
-                services[3]['title'] as String,
-                services[3]['description'] as String,
-                services[3]['onTap'] as VoidCallback,
                 isMobile,
                 isTablet,
               )),
