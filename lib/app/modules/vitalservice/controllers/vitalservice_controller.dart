@@ -174,7 +174,7 @@ class VitalserviceController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final response = await ApiService.to.get('https://crrsa-test.aacrrsa.gov.et/api/v1/portal-bff/my-requests?page=0&size=10');
+      final response = await ApiService.to.get('https://crrsa-api.risertechservices.com/api/v1/portal-bff/my-requests?page=0&size=10');
 
       if (response.statusCode == 200) {
         final data = response.data;

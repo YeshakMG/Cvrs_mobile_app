@@ -179,7 +179,7 @@ class ResidentidController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final response = await ApiService.to.get('https://crrsa-test.aacrrsa.gov.et/api/v1/portal-bff/my-requests?page=0&size=10');
+      final response = await ApiService.to.get('https://crrsa-api.risertechservices.com/api/v1/portal-bff/my-requests?page=0&size=10');
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -226,30 +226,30 @@ class ResidentidController extends GetxController {
       errorMessage.value = 'Error fetching services: $e';
       Get.snackbar('Error', errorMessage.value);
       // Fallback to sample data for development
-      _loadSampleData();
+     // _loadSampleData();
     } finally {
       isLoading.value = false;
     }
   }
 
-  void _loadSampleData() {
-    allServices.value = [
-      ResidentService(
-        id: '75a6677f-6057-4fae-bcdd-4a670dece0a6',
-        serviceType: 'ID Printing',
-        applicationId: 'BATCH-1764737355217',
-        description: 'ID printing request for batch processing - Print ID: 6ddec3fe-b05a-439f-8a24-0322c6d77c45',
-        status: RequestStatus.pending,
-        icon: Icons.credit_card,
-      ),
-      ResidentService(
-        id: 'sample-id-2',
-        serviceType: 'Regular Resident Registration',
-        applicationId: 'CRRSA-20251202134020',
-        description: 'New resident registration request for AA0000122288',
-        status: RequestStatus.pending,
-        icon: Icons.person,
-      ),
-    ];
-  }
+  // void _loadSampleData() {
+  //   allServices.value = [
+  //     ResidentService(
+  //       id: '75a6677f-6057-4fae-bcdd-4a670dece0a6',
+  //       serviceType: 'ID Printing',
+  //       applicationId: 'BATCH-1764737355217',
+  //       description: 'ID printing request for batch processing - Print ID: 6ddec3fe-b05a-439f-8a24-0322c6d77c45',
+  //       status: RequestStatus.pending,
+  //       icon: Icons.credit_card,
+  //     ),
+  //     ResidentService(
+  //       id: 'sample-id-2',
+  //       serviceType: 'Regular Resident Registration',
+  //       applicationId: 'CRRSA-20251202134020',
+  //       description: 'New resident registration request for AA0000122288',
+  //       status: RequestStatus.pending,
+  //       icon: Icons.person,
+  //     ),
+  //   ];
+  // }
 }

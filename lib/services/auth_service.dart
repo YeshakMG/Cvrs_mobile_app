@@ -8,7 +8,7 @@ class AuthService extends GetxService {
   static AuthService get to => Get.find();
   
   late final Dio _dio;
-  final String baseUrl = 'https://crrsa-auth-test.aacrrsa.gov.et';
+  final String baseUrl = 'https://crrsa-auth.risertechservices.com/';
   final String clientId = 'crrsa-portal-client';
   final String clientSecret = '6fZk1WfC6PSfeGzNvUYd5plveBhcC45q';
   

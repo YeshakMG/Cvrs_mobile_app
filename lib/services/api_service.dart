@@ -17,6 +17,8 @@ class ApiService extends GetxService {
   void _initDio() {
     _dio = dio.Dio(dio.BaseOptions(
       baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
