@@ -14,6 +14,7 @@ abstract class Routes {
   static const COMPLAINTANDFEEDBACK = _Paths.COMPLAINTANDFEEDBACK;
   static const COMPLAINT_SELECTION = _Paths.COMPLAINT_SELECTION;
   static const EXPERT_COMPLAINT = _Paths.COMPLAINT_SELECTION + _Paths.EXPERT_COMPLAINT;
+  static const MY_COMPLAINTS = _Paths.COMPLAINT_SELECTION + _Paths.MY_COMPLAINTS;
   static const FEEDBACK = _Paths.FEEDBACK;
   static const QR_SCANNER = _Paths.QR_SCANNER;
   static const SERVICE_DETAIL = _Paths.RESIDENTID + _Paths.SERVICE_DETAIL;
@@ -34,6 +35,7 @@ abstract class _Paths {
   static const COMPLAINT_SELECTION = '/complaint-selection';
   static const SERVICE_COMPLAINT = '/service-complaint';
   static const EXPERT_COMPLAINT = '/expert-complaint';
+  static const MY_COMPLAINTS = '/my-complaints';
   static const FEEDBACK = '/feedback';
   static const QR_SCANNER = '/qr-scanner';
   static const SERVICE_DETAIL = '/service-detail';

@@ -6,20 +6,36 @@ class CertificateService {
   final String downloadUrl;
   final String type;
   final String? expiryHours;
+  final Map<String, dynamic> payload;
 
   CertificateService({
     required this.name,
     required this.downloadUrl,
     required this.type,
     this.expiryHours,
+    required this.payload,
   });
 
   factory CertificateService.fromJson(Map<String, dynamic> json) {
+    final payload = json['payload'] as Map<String, dynamic>? ?? {};
+
+    // Determine certificate type based on payload data
+    String type = 'Certificate';
+    String name = 'Digital Certificate';
+    if (payload['idNo'] != null && payload['idNo'].toString().startsWith('ID/')) {
+      type = 'Resident';
+      name = 'Resident ID Certificate';
+    } else if (payload['regNo'] != null && payload['regNo'].toString().isNotEmpty) {
+      type = 'Vital';
+      name = 'Vital Certificate';
+    }
+
     return CertificateService(
-      name: json['name'] ?? 'Digital Certificate',
+      name: name,
       downloadUrl: json['downloadUrl'] ?? '',
-      type: json['type'] ?? 'Certificate',
+      type: type,
       expiryHours: json['expiryHours']?.toString(),
+      payload: payload,
     );
   }
 }
@@ -48,7 +64,7 @@ class DigitalcertificatesController extends GetxController {
       errorMessage.value = '';
 
       print('DEBUG: Making API call to https://crrsa-test.aacrrsa.gov.et/api/v1/portal-bff/my-certificates');
-      final response = await ApiService.to.get('https://crrsa-test.aacrrsa.gov.et/api/v1/portal-bff/my-certificates', queryParameters: {
+      final response = await ApiService.to.get('https://crrsa-api.risertechservices.com/api/v1/portal-bff/my-certificates', queryParameters: {
         'page': 0,
         'size': 10,
       });
@@ -108,26 +124,31 @@ class DigitalcertificatesController extends GetxController {
         name: 'Test Certificate',
         downloadUrl: 'https://crrsa-storage-test.aacrrsa.gov.et/public-files/f0444b18-65d6-4ed3-9f95-b609b8332599.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=5h6upTqkKAP1%2F20251203%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251203T081538Z&X-Amz-Expires=43200&X-Amz-SignedHeaders=host&X-Amz-Signature=41518d7548131c4b68dae7d4875d358228463a6504a04c126228a958c9123d8d',
         type: 'Test',
+        payload: {},
       ),
       CertificateService(
         name: 'Birth Certificate',
         downloadUrl: '', // Empty URL - will show icon
         type: 'Vital',
+        payload: {},
       ),
       CertificateService(
         name: 'Death Certificate',
         downloadUrl: '', // Empty URL - will show icon
         type: 'Vital',
+        payload: {},
       ),
       CertificateService(
         name: 'Marriage Certificate',
         downloadUrl: '', // Empty URL - will show icon
         type: 'Vital',
+        payload: {},
       ),
       CertificateService(
         name: 'Resident ID',
         downloadUrl: '', // Empty URL - will show icon
         type: 'Resident',
+        payload: {},
       ),
     ];
   }

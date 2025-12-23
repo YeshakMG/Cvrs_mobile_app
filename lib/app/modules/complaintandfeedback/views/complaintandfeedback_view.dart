@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 
 import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
-import '../../../../widgets/bottom_navigation.dart';
 import '../controllers/complaintandfeedback_controller.dart';
 
 class ComplaintandfeedbackView extends GetView<ComplaintandfeedbackController> {
@@ -104,7 +103,6 @@ class ComplaintandfeedbackView extends GetView<ComplaintandfeedbackController> {
           },
         ),
       ),
-      bottomNavigationBar: const BottomNavigationWidget(),
     );
   }
 

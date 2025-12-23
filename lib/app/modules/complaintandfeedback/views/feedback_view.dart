@@ -4,7 +4,6 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
-import '../../../../widgets/bottom_navigation.dart';
 import '../controllers/feedback_controller.dart';
 
 class FeedbackView extends GetView<FeedbackController> {
@@ -178,6 +177,42 @@ class FeedbackView extends GetView<FeedbackController> {
                                         );
                                       }),
                                     )),
+                                SizedBox(height: spacing),
+
+                                // Feedback text
+                                Text(
+                                  'Feedback',
+                                  style: AppFonts.bodyText1Style.copyWith(
+                                    fontWeight: AppFonts.semiBold,
+                                    color: AppColors.primary,
+                                    fontSize: fontSize,
+                                  ),
+                                ),
+                                SizedBox(height: spacing),
+                                TextField(
+                                  controller: controller.feedbackController,
+                                  maxLength: 500,
+                                  maxLines: 4,
+                                  cursorColor: AppColors.primary,
+                                  cursorWidth: 2.0,
+                                  cursorRadius: const Radius.circular(2),
+                                  decoration: InputDecoration(
+                                    hintText: 'Write your feedback here...',
+                                    hintStyle: TextStyle(fontSize: fontSize),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                          color: AppColors.primary),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                          color: AppColors.primary, width: 2),
+                                    ),
+                                    counterText:
+                                        '${controller.feedbackController.text.length}/500',
+                                  ),
+                                ),
                                 SizedBox(height: spacing * 2),
 
                                 // Terms checkbox
@@ -254,7 +289,6 @@ class FeedbackView extends GetView<FeedbackController> {
           },
         ),
       ),
-      bottomNavigationBar: const BottomNavigationWidget(),
     );
   }
 

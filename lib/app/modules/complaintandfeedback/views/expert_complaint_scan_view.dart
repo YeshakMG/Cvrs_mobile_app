@@ -10,7 +10,8 @@ import '../../../constants/colors.dart';
 import '../controllers/expert_complaint_controller.dart';
 
 class ExpertComplaintScanView extends StatefulWidget {
-  const ExpertComplaintScanView({super.key});
+  final Function(String) onDetected;
+  const ExpertComplaintScanView({super.key, required this.onDetected});
 
   @override
   State<ExpertComplaintScanView> createState() => _ExpertComplaintScanViewState();
@@ -203,8 +204,7 @@ class _ExpertComplaintScanViewState extends State<ExpertComplaintScanView>
 
         // Simulate processing time with shimmer
         Future.delayed(const Duration(seconds: 1), () {
-          final expertController = Get.find<ExpertComplaintController>();
-          expertController.parseBadgeData(barcode.rawValue!);
+          widget.onDetected(barcode.rawValue!);
           Get.back();
         });
         break; // Stop after first detection

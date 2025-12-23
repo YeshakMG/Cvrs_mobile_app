@@ -11,7 +11,6 @@ import 'dart:convert';
 
 import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
-import '../../../../widgets/bottom_navigation.dart';
 import '../../../../services/api_service.dart';
 import '../controllers/digitalcertificates_controller.dart';
 
@@ -199,7 +198,6 @@ class DigitalcertificatesView extends GetView<DigitalcertificatesController> {
           },
         ),
       ),
-      bottomNavigationBar: const BottomNavigationWidget(),
     );
   }
 Widget _buildCertificateCard(CertificateService certificate) {
@@ -234,45 +232,22 @@ Widget _buildCertificateCard(CertificateService certificate) {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: certificate.downloadUrl.isNotEmpty
-                  ? FutureBuilder<Uint8List>(
-                      future: _getPdfThumbnail(certificate.downloadUrl),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Container(
-                            color: Colors.grey[100],
-                            child: const Center(child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )),
-                          );
-                        } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty) {
-                          print('PDF thumbnail error for URL: ${certificate.downloadUrl}');
-                          print('Error details: ${snapshot.error}');
-                          return Container(
-                            color: Colors.red[50],
-                            child: const Icon(
-                              Icons.picture_as_pdf,
-                              size: 40,
-                              color: Colors.red,
-                            ),
-                          );
-                        } else {
-                          return Image.memory(
-                            snapshot.data!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              color: Colors.red[50],
-                              child: const Icon(
-                                Icons.picture_as_pdf,
-                                size: 40,
-                                color: Colors.red,
-                              ),
-                            ),
-                          );
-                        }
+            child: certificate.payload['img'] != null && certificate.payload['img'].toString().isNotEmpty
+                  ? Image.network(
+                      certificate.payload['img'],
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: Colors.grey[100],
+                          child: const Center(child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )),
+                        );
                       },
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.description, size: 40, color: Colors.grey),
                     )
                   : const Icon(Icons.description, size: 40, color: Colors.grey),
           ),
@@ -358,10 +333,19 @@ Widget _buildCertificateCard(CertificateService certificate) {
   }
 
   Future<void> _downloadCertificate(CertificateService certificate) async {
-    if (certificate.downloadUrl.isEmpty) {
+    String? downloadUrl;
+
+    // Prefer img, fallback to signiture
+    if (certificate.payload['img'] != null && certificate.payload['img'].toString().isNotEmpty) {
+      downloadUrl = certificate.payload['img'];
+    } else if (certificate.payload['signiture'] != null && certificate.payload['signiture'].toString().isNotEmpty) {
+      downloadUrl = certificate.payload['signiture'];
+    }
+
+    if (downloadUrl == null || downloadUrl.isEmpty) {
       Get.snackbar(
         'Download Unavailable',
-        'No download URL available for ${certificate.name}',
+        'No image available for ${certificate.name}',
         snackPosition: SnackPosition.BOTTOM,
       );
       return;
@@ -371,106 +355,80 @@ Widget _buildCertificateCard(CertificateService certificate) {
       // Show loading
       Get.snackbar(
         'Downloading',
-        'Downloading ${certificate.name}...',
+        'Downloading image for ${certificate.name}...',
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 2),
       );
 
       // Get download directory
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = '${certificate.name.replaceAll(' ', '_')}.pdf';
+      final fileName = '${certificate.name.replaceAll(' ', '_')}_image.jpg';
       final filePath = '${directory.path}/$fileName';
 
-      print('Download - Starting download for: ${certificate.downloadUrl}');
+      print('Download - Starting download for: $downloadUrl');
 
-      // Get the PDF data with proper decoding and AWS headers
+      // Download the image
       final response = await Dio().get(
-        certificate.downloadUrl,
+        downloadUrl,
         options: Options(
           responseType: ResponseType.bytes,
           headers: {
             'Accept': '*/*',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36',
-            // AWS S3 signed URL headers
-            'X-Amz-Algorithm': _extractAwsParam(certificate.downloadUrl, 'X-Amz-Algorithm'),
-            'X-Amz-Credential': _extractAwsParam(certificate.downloadUrl, 'X-Amz-Credential'),
-            'X-Amz-Date': _extractAwsParam(certificate.downloadUrl, 'X-Amz-Date'),
-            'X-Amz-Expires': _extractAwsParam(certificate.downloadUrl, 'X-Amz-Expires'),
-            'X-Amz-SignedHeaders': _extractAwsParam(certificate.downloadUrl, 'X-Amz-SignedHeaders'),
-            'X-Amz-Signature': _extractAwsParam(certificate.downloadUrl, 'X-Amz-Signature'),
           },
         ),
       );
-      final data = response.data;
 
-      print('Download - Response data type: ${data.runtimeType}, length: ${data is Uint8List ? data.length : 'N/A'}');
+      if (response.statusCode == 200 && response.data is Uint8List) {
+        final imageBytes = response.data as Uint8List;
 
-      Uint8List pdfBytes;
-      if (data is String) {
-        // If response is string, try base64 decoding
-        try {
-          pdfBytes = base64Decode(data);
-          print('Download - Successfully decoded base64, length: ${pdfBytes.length}');
-        } catch (e) {
-          print('Download - Base64 decode failed, using as-is: $e');
-          pdfBytes = Uint8List.fromList(utf8.encode(data));
-        }
-      } else if (data is Uint8List) {
-        pdfBytes = data;
-        print('Download - Data is already Uint8List, length: ${pdfBytes.length}');
-      } else {
-        throw 'Invalid PDF data format';
-      }
+        // Save to file
+        final file = File(filePath);
+        await file.writeAsBytes(imageBytes);
 
-      // Save to file
-      final file = File(filePath);
-      await file.writeAsBytes(pdfBytes);
+        print('Download - File saved to: $filePath');
 
-      print('Download - File saved to: $filePath');
-
-      // Show success and offer to open
-      Get.snackbar(
-        'Download Complete',
-        'File saved to: $filePath',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 4),
-        mainButton: TextButton(
-          onPressed: () async {
-            final file = File(filePath);
-            if (await file.exists()) {
-              // Try to open the file
-              final url = Uri.file(filePath);
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url);
-              } else {
-                Get.snackbar(
-                  'Open File',
-                  'Unable to open file automatically',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
+        // Show success and offer to open
+        Get.snackbar(
+          'Download Complete',
+          'Image saved to: $filePath',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 4),
+          mainButton: TextButton(
+            onPressed: () async {
+              final file = File(filePath);
+              if (await file.exists()) {
+                // Try to open the file
+                final url = Uri.file(filePath);
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url);
+                } else {
+                  Get.snackbar(
+                    'Open File',
+                    'Unable to open file automatically',
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                }
               }
-            }
-          },
-          child: const Text('Open', style: TextStyle(color: Colors.white)),
-        ),
-      );
+            },
+            child: const Text('Open', style: TextStyle(color: Colors.white)),
+          ),
+        );
+      } else {
+        Get.snackbar(
+          'Download Failed',
+          'Unable to download image',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
     } catch (e) {
       print('Download error: $e');
-      if (e is DioException && e.response?.statusCode == 404) {
-        Get.snackbar(
-          'Download Failed',
-          'File not accessible (404). The download link may have expired.',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 4),
-        );
-      } else {
-        Get.snackbar(
-          'Download Failed',
-          'Error downloading ${certificate.name}: $e',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 4),
-        );
-      }
+      Get.snackbar(
+        'Download Failed',
+        'Error downloading image for ${certificate.name}: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 4),
+      );
     }
   }
 
@@ -629,157 +587,159 @@ Widget _buildCertificateCard(CertificateService certificate) {
     }
   }
 
-  void _previewCertificate(CertificateService certificate) async {
-    if (certificate.downloadUrl.isEmpty) {
-      Get.snackbar(
-        'Preview Unavailable',
-        'No certificate URL available',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
-    try {
-      // Show loading
-      Get.dialog(
-        const Center(child: CircularProgressIndicator()),
-        barrierDismissible: false,
-      );
-
-      // Download PDF content
-      final response = await Dio().get(
-        certificate.downloadUrl,
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {
-            'Accept': '*/*',
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36',
-            'X-Amz-Algorithm': _extractAwsParam(certificate.downloadUrl, 'X-Amz-Algorithm'),
-            'X-Amz-Credential': _extractAwsParam(certificate.downloadUrl, 'X-Amz-Credential'),
-            'X-Amz-Date': _extractAwsParam(certificate.downloadUrl, 'X-Amz-Date'),
-            'X-Amz-Expires': _extractAwsParam(certificate.downloadUrl, 'X-Amz-Expires'),
-            'X-Amz-SignedHeaders': _extractAwsParam(certificate.downloadUrl, 'X-Amz-SignedHeaders'),
-            'X-Amz-Signature': _extractAwsParam(certificate.downloadUrl, 'X-Amz-Signature'),
-          },
-        ),
-      );
-
-      Get.back(); // Close loading dialog
-
-      if (response.statusCode == 200 && response.data is Uint8List) {
-        final pdfBytes = response.data as Uint8List;
-
-        // Show PDF preview dialog with actual PDF viewer
-        Get.dialog(
-          Dialog(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              constraints: BoxConstraints(
-                maxHeight: Get.height * 0.8,
-                maxWidth: Get.width * 0.9,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    certificate.name,
-                    style: AppFonts.bodyText1Style.copyWith(
-                      fontWeight: AppFonts.semiBold,
-                      color: AppColors.primary,
-                    ),
-                    textAlign: TextAlign.center,
+  void _previewCertificate(CertificateService certificate) {
+    // Show certificate details dialog
+    Get.dialog(
+      Dialog(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          constraints: BoxConstraints(
+            maxHeight: Get.height * 0.8,
+            maxWidth: Get.width * 0.9,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  certificate.name,
+                  style: AppFonts.bodyText1Style.copyWith(
+                    fontWeight: AppFonts.semiBold,
+                    color: AppColors.primary,
+                    fontSize: 18,
                   ),
-                  const SizedBox(height: 16),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                // Display certificate image if available
+                if (certificate.payload['img'] != null && certificate.payload['img'].toString().isNotEmpty)
                   Container(
-                    height: 400,
+                    height: 150,
+                    width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey[300]!),
                     ),
-                    child: FutureBuilder<Uint8List>(
-                      future: _generatePdfPreviewImage(pdfBytes),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
-                        } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                          return const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.picture_as_pdf, size: 48, color: Colors.red),
-                                SizedBox(height: 8),
-                                Text(
-                                  'PDF Preview',
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Certificate loaded successfully',
-                                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          );
-                        } else {
-                          return Container(
-                            padding: const EdgeInsets.all(8),
-                            child: Image.memory(
-                              snapshot.data!,
-                              fit: BoxFit.contain,
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          Get.back();
-                          await _downloadCertificate(certificate);
-                        },
-                        icon: const Icon(Icons.download),
-                        label: const Text('Download'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        certificate.payload['img'],
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => const Center(
+                          child: Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
                         ),
                       ),
-                      ElevatedButton(
-                        onPressed: () => Get.back(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[300],
-                          foregroundColor: Colors.black,
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                // Certificate details
+                _buildDetailRow('ID No:', certificate.payload['idNo'] ?? 'N/A'),
+                _buildDetailRow('Full Name:', certificate.payload['fullName'] ?? 'N/A'),
+                _buildDetailRow('Date of Birth:', certificate.payload['dob'] ?? 'N/A'),
+                _buildDetailRow('Sex:', certificate.payload['sex'] ?? 'N/A'),
+                _buildDetailRow('Blood Type:', certificate.payload['bloodType'] ?? 'N/A'),
+                _buildDetailRow('Issue Date:', certificate.payload['issueDate'] ?? 'N/A'),
+                _buildDetailRow('Expiry Date:', certificate.payload['expiryDate'] ?? 'N/A'),
+                _buildDetailRow('Registration No:', certificate.payload['regNo'] ?? 'N/A'),
+                _buildDetailRow('Woreda:', certificate.payload['woredaen'] ?? 'N/A'),
+                _buildDetailRow('Subcity:', certificate.payload['subcityen'] ?? 'N/A'),
+                if (certificate.payload['motherNameen'] != null)
+                  _buildDetailRow('Mother Name:', certificate.payload['motherNameen']),
+                const SizedBox(height: 16),
+                // Signature if available
+                if (certificate.payload['signiture'] != null && certificate.payload['signiture'].toString().isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Signature:',
+                        style: AppFonts.bodyText2Style.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
                         ),
-                        child: const Text('Close'),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 80,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            certificate.payload['signiture'],
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => const Center(
+                              child: Text('Signature not available', style: TextStyle(color: Colors.grey)),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ],
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        Get.back();
+                        await _downloadCertificate(certificate);
+                      },
+                      icon: const Icon(Icons.download),
+                      label: const Text('Download Image'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Get.back(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[300],
+                        foregroundColor: Colors.black,
+                      ),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: AppFonts.bodyText2Style.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
               ),
             ),
           ),
-        );
-      } else {
-        Get.snackbar(
-          'Preview Failed',
-          'Unable to load certificate preview',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    } catch (e) {
-      Get.back(); // Close loading dialog if open
-      print('Preview error: $e');
-      Get.snackbar(
-        'Preview Failed',
-        'Error loading certificate: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 4),
-      );
-    }
+          Expanded(
+            child: Text(
+              value,
+              style: AppFonts.bodyText2Style.copyWith(
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

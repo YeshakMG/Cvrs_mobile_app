@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 
 import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
-import '../../../../widgets/bottom_navigation.dart';
 import '../controllers/complaint_selection_controller.dart';
 
 class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
@@ -62,29 +61,42 @@ class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
                   ),
                   SizedBox(height: spacing),
 
-                  // Service and Expert Cards side by side
-                  Row(
+                  // Complaint Options
+                  Column(
                     children: [
-                      Expanded(
-                        child: _buildOptionCard(
-                          context,
-                          'Service',
-                          Icons.miscellaneous_services_rounded,
-                          () => controller.selectComplaintType('service'),
-                          isMobile,
-                          isTablet,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildOptionCard(
+                              context,
+                              'Service',
+                              Icons.miscellaneous_services_rounded,
+                              () => controller.selectComplaintType('service'),
+                              isMobile,
+                              isTablet,
+                            ),
+                          ),
+                          SizedBox(width: cardSpacing),
+                          Expanded(
+                            child: _buildOptionCard(
+                              context,
+                              'Expert',
+                              Icons.person_outline_rounded,
+                              () => controller.selectComplaintType('expert'),
+                              isMobile,
+                              isTablet,
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(width: cardSpacing),
-                      Expanded(
-                        child: _buildOptionCard(
-                          context,
-                          'Expert',
-                          Icons.person_outline_rounded,
-                          () => controller.selectComplaintType('expert'),
-                          isMobile,
-                          isTablet,
-                        ),
+                      SizedBox(height: cardSpacing),
+                      _buildOptionCard(
+                        context,
+                        'My Complaints',
+                        Icons.history_rounded,
+                        () => controller.selectComplaintType('my-complaints'),
+                        isMobile,
+                        isTablet,
                       ),
                     ],
                   ),
@@ -94,7 +106,6 @@ class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
           },
         ),
       ),
-      bottomNavigationBar: const BottomNavigationWidget(),
     );
   }
 

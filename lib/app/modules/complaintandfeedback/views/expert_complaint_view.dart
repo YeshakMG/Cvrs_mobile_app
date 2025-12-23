@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 
 import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
-import '../../../../widgets/bottom_navigation.dart';
 import '../controllers/expert_complaint_controller.dart';
 
 class ExpertComplaintView extends GetView<ExpertComplaintController> {
@@ -43,21 +42,15 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
             final buttonPadding = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
 
             return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: padding),
                 child: Obx(() {
-                  // Center content vertically
-                  return IntrinsicHeight(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: padding),
-                      child: Column(
-                        mainAxisAlignment: controller.expertName.isEmpty
-                            ? MainAxisAlignment.center
-                            : MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+                  return Column(
+                    mainAxisAlignment: controller.expertName.isEmpty
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                           if (controller.expertName.isEmpty)
                             Column(
                               mainAxisSize: MainAxisSize.min,
@@ -194,43 +187,71 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                     ),
                                   ),
                                 ),
-                                InkWell(
-                                  onTap: controller.pickAttachment,
-                                  child: Container(
-                                    padding: EdgeInsets.all(attachmentPadding),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: AppColors.primary),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.attach_file,
-                                          color: AppColors.primary,
-                                          size: isMobile ? 24.0 : (isTablet ? 26.0 : 28.0),
-                                        ),
-                                        SizedBox(width: spacing),
-                                        Expanded(
-                                          child: Obx(() => Text(
-                                                controller.selectedFileName.value
-                                                        .isEmpty
-                                                    ? 'No file selected'
-                                                    : controller
-                                                        .selectedFileName.value,
-                                                style:
-                                                    AppFonts.bodyText2Style.copyWith(
-                                                  color: controller
-                                                          .selectedFileName
-                                                          .value
-                                                          .isEmpty
-                                                      ? AppColors.textSecondary
-                                                      : AppColors.primary,
-                                                  fontSize: fontSize,
+                                Obx(
+                                  () => Column(
+                                    children: [
+                                      ...controller.selectedFileNames.asMap().entries.map(
+                                        (entry) => Container(
+                                          margin: EdgeInsets.only(bottom: spacing * 0.5),
+                                          padding: EdgeInsets.all(attachmentPadding * 0.8),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(color: AppColors.primary),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.attach_file,
+                                                color: AppColors.primary,
+                                                size: isMobile ? 20.0 : (isTablet ? 22.0 : 24.0),
+                                              ),
+                                              SizedBox(width: spacing * 0.5),
+                                              Expanded(
+                                                child: Text(
+                                                  entry.value,
+                                                  style: AppFonts.bodyText2Style.copyWith(
+                                                    color: AppColors.primary,
+                                                  ),
                                                 ),
-                                              )),
+                                              ),
+                                              IconButton(
+                                                onPressed: () => controller.removeAttachment(entry.key),
+                                                icon: Icon(Icons.close, size: isMobile ? 20.0 : (isTablet ? 22.0 : 24.0)),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      InkWell(
+                                        onTap: controller.pickAttachment,
+                                        child: Container(
+                                          padding: EdgeInsets.all(attachmentPadding),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(color: AppColors.primary),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.attach_file,
+                                                color: AppColors.primary,
+                                                size: isMobile ? 24.0 : (isTablet ? 26.0 : 28.0),
+                                              ),
+                                              SizedBox(width: spacing),
+                                              Expanded(
+                                                child: Text(
+                                                  'Tap to attach file (PNG, JPEG, DOCX, PDF)',
+                                                  style: AppFonts.bodyText2Style.copyWith(
+                                                    color: AppColors.textSecondary,
+                                                    fontSize: fontSize,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 SizedBox(height: spacing * 2),
@@ -264,19 +285,18 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                               ),
                                       )),
                                 ),
+                                // Gap for multiple files
+                                Obx(() => SizedBox(height: controller.selectedFileNames.isNotEmpty ? spacing * 4 : spacing * 2)),
                               ],
                             ),
                         ],
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            );
+                      );
+                    }),
+                  ),
+                );
           },
         ),
       ),
-      bottomNavigationBar: const BottomNavigationWidget(),
     );
   }
 

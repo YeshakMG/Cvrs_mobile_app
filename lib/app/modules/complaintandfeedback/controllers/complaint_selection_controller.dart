@@ -8,8 +8,10 @@ class ComplaintSelectionController extends GetxController {
   void selectComplaintType(String type) {
     if (type == 'service') {
       Get.toNamed('/complaintandfeedback/complaint-selection/service-complaint');
-    } else {
+    } else if (type == 'expert') {
       Get.toNamed('/complaintandfeedback/complaint-selection/expert-complaint');
+    } else if (type == 'my-complaints') {
+      Get.toNamed('/complaintandfeedback/complaint-selection/my-complaints');
     }
   }
 

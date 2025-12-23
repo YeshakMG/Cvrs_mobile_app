@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 
 import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
-import '../../../../widgets/bottom_navigation.dart';
 import '../controllers/service_complaint_controller.dart';
 
 class ServiceComplaintView extends GetView<ServiceComplaintController> {
@@ -94,7 +93,7 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                                       return DropdownMenuItem<String>(
                                         value: value,
                                         child: Text(
-                                          controller.serviceTypeNames[value] ?? value,
+                                          value,
                                           style: TextStyle(fontSize: fontSize),
                                         ),
                                       );
@@ -423,39 +422,70 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                 ),
               ),
               SizedBox(height: sectionSpacing),
-              InkWell(
-                onTap: controller.pickAttachment,
-                child: Container(
-                  padding: EdgeInsets.all(fieldPadding),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.attach_file,
-                        color: AppColors.primary,
-                        size: iconSize,
-                      ),
-                      SizedBox(width: sectionSpacing),
-                      Expanded(
-                        child: Obx(
-                          () => Text(
-                            controller.selectedFileName.value.isEmpty
-                                ? 'Tap to attach file'
-                                : controller.selectedFileName.value,
-                            style: AppFonts.bodyText2Style.copyWith(
-                              color:
-                                  controller.selectedFileName.value.isEmpty
-                                      ? AppColors.textSecondary
-                                      : AppColors.primary,
+              Obx(
+                () => Column(
+                  children: [
+                    ...controller.selectedFileNames.asMap().entries.map(
+                      (entry) => Container(
+                        margin: EdgeInsets.only(bottom: sectionSpacing * 0.5),
+                        padding: EdgeInsets.all(fieldPadding * 0.8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.primary),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.attach_file,
+                              color: AppColors.primary,
+                              size: iconSize * 0.8,
                             ),
-                          ),
+                            SizedBox(width: sectionSpacing * 0.5),
+                            Expanded(
+                              child: Text(
+                                entry.value,
+                                style: AppFonts.bodyText2Style.copyWith(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => controller.removeAttachment(entry.key),
+                              icon: Icon(Icons.close, size: iconSize * 0.8),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    InkWell(
+                      onTap: controller.pickAttachment,
+                      child: Container(
+                        padding: EdgeInsets.all(fieldPadding),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.primary),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.attach_file,
+                              color: AppColors.primary,
+                              size: iconSize,
+                            ),
+                            SizedBox(width: sectionSpacing),
+                            Expanded(
+                              child: Text(
+                                'Tap to attach file (PNG, JPEG, DOCX, PDF)',
+                                style: AppFonts.bodyText2Style.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -489,7 +519,6 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
       },
     ),
   ),
-  bottomNavigationBar: const BottomNavigationWidget(),
 );
   }
 }

@@ -15,6 +15,8 @@ import '../modules/complaintandfeedback/bindings/feedback_binding.dart';
 import '../modules/complaintandfeedback/views/feedback_view.dart';
 import '../modules/complaintandfeedback/bindings/qr_scanner_binding.dart';
 import '../modules/complaintandfeedback/views/qr_scanner_view.dart';
+import '../modules/complaintandfeedback/bindings/my_complaints_binding.dart';
+import '../modules/complaintandfeedback/views/my_complaints_view.dart';
 import '../modules/digitalcertificates/bindings/digitalcertificates_binding.dart';
 import '../modules/digitalcertificates/views/digitalcertificates_view.dart';
 import '../modules/home/bindings/home_binding.dart';
@@ -117,6 +119,11 @@ class AppPages {
               name: _Paths.EXPERT_COMPLAINT,
               page: () => const ExpertComplaintView(),
               binding: ExpertComplaintBinding(),
+            ),
+            GetPage(
+              name: _Paths.MY_COMPLAINTS,
+              page: () => const MyComplaintsView(),
+              binding: MyComplaintsBinding(),
             ),
           ],
         ),

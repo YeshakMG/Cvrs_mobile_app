@@ -9,7 +9,6 @@ import '../../../../services/auth_service.dart';
 class ServiceComplaintController extends GetxController {
   // Service Types from API
   final RxList<String> serviceTypes = <String>[].obs;
-  final RxMap<String, String> serviceTypeNames = RxMap({});
   final isLoadingServiceTypes = false.obs;
 
   // Branches
@@ -50,9 +49,9 @@ class ServiceComplaintController extends GetxController {
   final TextEditingController descriptionController = TextEditingController();
 
   // Attachment
-  final selectedFileName = ''.obs;
-  File? selectedFile;
-  final attachmentId = ''.obs;
+  final selectedFileNames = <String>[].obs;
+  final selectedFiles = <File>[].obs;
+  final attachmentIds = <String>[].obs;
 
   // Error messages
   final serviceTypeError = ''.obs;
@@ -82,12 +81,10 @@ class ServiceComplaintController extends GetxController {
           serviceTypesJson = [];
         }
 
-        // Extract service type codes and names
-        List<String> codes = [];
-        Map<String, String> names = {};
+        // Extract service type names
+        List<String> names = [];
         for (var item in serviceTypesJson) {
           if (item is Map<String, dynamic>) {
-            String? code = (item['code'] as String?) ?? (item['id'] as String?);
             String? name;
             if (item.containsKey('localizedContent') &&
                 item['localizedContent'] is Map<String, dynamic> &&
@@ -98,15 +95,15 @@ class ServiceComplaintController extends GetxController {
               name = item['name'] as String;
             }
 
-            if (code != null && code.isNotEmpty && name != null && name.isNotEmpty) {
-              codes.add(code);
-              names[code] = name;
+            if (name != null && name.isNotEmpty) {
+              names.add(name);
             }
+          } else if (item is String) {
+            names.add(item);
           }
         }
 
-        serviceTypes.value = codes;
-        serviceTypeNames.value = names;
+        serviceTypes.value = names;
       } else {
         // On non-200 status, set empty
         serviceTypes.value = [];
@@ -324,42 +321,44 @@ class ServiceComplaintController extends GetxController {
   void pickAttachment() async {
     try {
       final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      final pickedFiles = await picker.pickMultiImage();
 
-      if (pickedFile != null) {
-        selectedFile = File(pickedFile.path);
-        selectedFileName.value = pickedFile.name;
+      for (final pickedFile in pickedFiles) {
+        final file = File(pickedFile.path);
+        final name = pickedFile.name;
 
         // Check file size (10MB limit)
-        final fileSize = await selectedFile!.length();
+        final fileSize = await file.length();
         if (fileSize > 10 * 1024 * 1024) { // 10MB in bytes
           Get.snackbar(
             'Error',
-            'File size must be less than 10MB',
+            'File size must be less than 10MB: $name',
             snackPosition: SnackPosition.BOTTOM,
           );
-          selectedFile = null;
-          selectedFileName.value = '';
-        } else {
-          // Upload the file automatically
-          await uploadFile();
+          continue;
+        }
+
+        // Upload the file automatically
+        final id = await uploadFile(file, name);
+        if (id != null) {
+          selectedFiles.add(file);
+          selectedFileNames.add(name);
+          attachmentIds.add(id);
         }
       }
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Failed to pick file',
+        'Failed to pick files',
         snackPosition: SnackPosition.BOTTOM,
       );
     }
   }
 
-  Future<void> uploadFile() async {
-    if (selectedFile == null) return;
-
+  Future<String?> uploadFile(File file, String name) async {
     try {
       dio.FormData formData = dio.FormData.fromMap({
-        'file': await dio.MultipartFile.fromFile(selectedFile!.path, filename: selectedFileName.value),
+        'file': await dio.MultipartFile.fromFile(file.path, filename: name),
       });
 
       // Create a new Dio instance without interceptors to avoid FormData reuse issues
@@ -379,11 +378,18 @@ class ServiceComplaintController extends GetxController {
 
       // Assuming response.data is a Map with 'id'
       if (response.data is Map<String, dynamic> && response.data.containsKey('id')) {
-        attachmentId.value = response.data['id'].toString();
+        return response.data['id'].toString();
       }
     } catch (e) {
       print('Upload Error: $e');
     }
+    return null;
+  }
+
+  void removeAttachment(int index) {
+    selectedFiles.removeAt(index);
+    selectedFileNames.removeAt(index);
+    attachmentIds.removeAt(index);
   }
 
   Future<void> submitComplaint() async {
@@ -434,12 +440,10 @@ class ServiceComplaintController extends GetxController {
         'serviceType': selectedServiceType.value,
         'description': descriptionController.text,
         'structureId': selectedBranch.value == 'Sub-cities' ? (subCityIds[selectedSubBranch.value] ?? '') : '',
-        'attachments': attachmentId.value.isNotEmpty ? [
-          {
-            'attachmentId': attachmentId.value,
-            'description': 'Supporting document'
-          }
-        ] : [],
+        'attachments': attachmentIds.isNotEmpty ? attachmentIds.map((id) => {
+          'attachmentId': id,
+          'description': 'Supporting document'
+        }).toList() : [],
       };
 
       print('Posting to: https://crrsa-api.risertechservices.com/api/v1/complaint-service/complaints');
@@ -449,12 +453,16 @@ class ServiceComplaintController extends GetxController {
 
       print('Complaint Submit Response: ${response.data}');
 
-      Get.snackbar(
-        'Success',
-        'Complaint submitted successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+      Get.defaultDialog(
+        title: 'Success',
+        middleText: 'Complaint submitted successfully',
+        textConfirm: 'OK',
+        confirmTextColor: Colors.white,
+        onConfirm: () {
+          Get.back(); // Close dialog
+          resetForm();
+          Get.back(); // Go back to previous screen
+        },
       );
     } catch (e) {
       print('Submit Error: $e');
@@ -465,16 +473,18 @@ class ServiceComplaintController extends GetxController {
       );
       return; // Don't reset on error
     }
+  }
 
+  void resetForm() {
     // Reset form
     selectedServiceType.value = '';
     selectedBranch.value = '';
     selectedSubBranch.value = '';
     selectedWoreda.value = '';
     descriptionController.clear();
-    selectedFileName.value = '';
-    selectedFile = null;
-    attachmentId.value = '';
+    selectedFileNames.clear();
+    selectedFiles.clear();
+    attachmentIds.clear();
 
     // Clear errors
     serviceTypeError.value = '';
@@ -482,8 +492,5 @@ class ServiceComplaintController extends GetxController {
     subBranchError.value = '';
     woredaError.value = '';
     descriptionError.value = '';
-
-    // Navigate back or to success page
-    Get.back();
   }
 }
