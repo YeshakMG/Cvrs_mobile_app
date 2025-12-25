@@ -100,44 +100,44 @@ class AppPages {
       page: () => const DigitalcertificatesView(),
       binding: DigitalcertificatesBinding(),
     ),
-    GetPage(
-      name: _Paths.COMPLAINTANDFEEDBACK,
-      page: () => const ComplaintandfeedbackView(),
-      binding: ComplaintandfeedbackBinding(),
-      children: [
-        GetPage(
-          name: _Paths.COMPLAINT_SELECTION,
-          page: () => const ComplaintSelectionView(),
-          binding: ComplaintSelectionBinding(),
-          children: [
-            GetPage(
-              name: _Paths.SERVICE_COMPLAINT,
-              page: () => const ServiceComplaintView(),
-              binding: ServiceComplaintBinding(),
-            ),
-            GetPage(
-              name: _Paths.EXPERT_COMPLAINT,
-              page: () => const ExpertComplaintView(),
-              binding: ExpertComplaintBinding(),
-            ),
-            GetPage(
-              name: _Paths.MY_COMPLAINTS,
-              page: () => const MyComplaintsView(),
-              binding: MyComplaintsBinding(),
-            ),
-          ],
-        ),
-        GetPage(
-          name: _Paths.FEEDBACK,
-          page: () => const FeedbackView(),
-          binding: FeedbackBinding(),
-        ),
-        GetPage(
-          name: _Paths.QR_SCANNER,
-          page: () => const QRScannerView(),
-          binding: QRScannerBinding(),
-        ),
-      ],
-    ),
+    // GetPage(
+    //   name: _Paths.COMPLAINTANDFEEDBACK,
+    //   page: () => const ComplaintandfeedbackView(),
+    //   binding: ComplaintandfeedbackBinding(),
+    //   children: [
+    //     GetPage(
+    //       name: _Paths.COMPLAINT_SELECTION,
+    //       page: () => const ComplaintSelectionView(),
+    //       binding: ComplaintSelectionBinding(),
+    //       children: [
+    //         GetPage(
+    //           name: _Paths.SERVICE_COMPLAINT,
+    //           page: () => const ServiceComplaintView(),
+    //           binding: ServiceComplaintBinding(),
+    //         ),
+    //         GetPage(
+    //           name: _Paths.EXPERT_COMPLAINT,
+    //           page: () => const ExpertComplaintView(),
+    //           binding: ExpertComplaintBinding(),
+    //         ),
+    //         GetPage(
+    //           name: _Paths.MY_COMPLAINTS,
+    //           page: () => const MyComplaintsView(),
+    //           binding: MyComplaintsBinding(),
+    //         ),
+    //       ],
+    //     ),
+    //     GetPage(
+    //       name: _Paths.FEEDBACK,
+    //       page: () => const FeedbackView(),
+    //       binding: FeedbackBinding(),
+    //     ),
+    //     GetPage(
+    //       name: _Paths.QR_SCANNER,
+    //       page: () => const QRScannerView(),
+    //       binding: QRScannerBinding(),
+    //     ),
+    //   ],
+    // ),
   ];
 }
