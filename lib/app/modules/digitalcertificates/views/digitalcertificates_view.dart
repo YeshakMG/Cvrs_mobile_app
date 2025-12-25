@@ -379,6 +379,9 @@ Widget _buildCertificateCard(CertificateService certificate) {
         ),
       );
 
+      print('Download response status: ${response.statusCode}');
+      print('Download response body: ${response.data}');
+
       if (response.statusCode == 200 && response.data is Uint8List) {
         final imageBytes = response.data as Uint8List;
 
@@ -448,6 +451,10 @@ Widget _buildCertificateCard(CertificateService certificate) {
           },
         ),
       );
+
+      print('PDF Thumbnail response status: ${response.statusCode}');
+      print('PDF Thumbnail response body: ${response.data}');
+
       final data = response.data;
 
       print('PDF Thumbnail - Downloaded data type: ${data.runtimeType}, length: ${data is Uint8List ? data.length : 'N/A'}');
