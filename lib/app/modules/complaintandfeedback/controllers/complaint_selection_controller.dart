@@ -10,8 +10,6 @@ class ComplaintSelectionController extends GetxController {
       Get.toNamed('/complaintandfeedback/complaint-selection/service-complaint');
     } else if (type == 'expert') {
       Get.toNamed('/complaintandfeedback/complaint-selection/expert-complaint');
-    } else if (type == 'my-complaints') {
-      Get.toNamed('/complaintandfeedback/complaint-selection/my-complaints');
     }
   }
 

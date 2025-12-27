@@ -59,7 +59,7 @@ class JWKSCache {
     }
 
     final response = await http.get(
-      Uri.parse('https://crrsa-test.aacrrsa.gov.et/api/v1/credential-service/keys/.well-known/jwks.json'),
+      Uri.parse('https://crrsa-api.risertechservices.com/api/v1/credential-service/keys/.well-known/jwks.json'),
     );
 
     _cachedJWKS = jsonDecode(response.body);
@@ -286,7 +286,7 @@ class AuthenticateController extends GetxController {
       final dioInstance = dio.Dio();
       final authService = AuthService.to;
       final response = await dioInstance.post(
-        'https://crrsa-test.aacrrsa.gov.et/api/v1/credential-service/credentials/verify',
+        'https://crrsa-api.risertechservices.com/api/v1/credential-service/credentials/verify',
         data: {
           'qrData': scannedData,
           'inputType': 'qr_string'

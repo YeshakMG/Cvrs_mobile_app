@@ -253,6 +253,12 @@ class HomeView extends GetView<HomeController> {
         'description': 'Download and verify digital documents',
         'onTap': () => controller.selectServiceCategory(2),
       },
+      {
+        'icon': Icons.feedback,
+        'title': 'Complaint & Feedback',
+        'description': 'Share your complaints and feedback',
+        'onTap': () => controller.selectServiceCategory(3),
+      },
     ];
 
     if (!isMobile) {

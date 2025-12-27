@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+
 import 'package:get/get.dart';
 
 import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
-import '../controllers/complaint_selection_controller.dart';
+import '../controllers/complaint_options_controller.dart';
 
-class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
-  const ComplaintSelectionView({super.key});
+class ComplaintOptionsView extends GetView<ComplaintOptionsController> {
+  const ComplaintOptionsView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,7 @@ class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
             final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
             final fontSize = isMobile ? 16.0 : (isTablet ? 18.0 : 20.0);
             return Text(
-              'Complaint Type',
+              'Complaint Options',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: fontSize,
@@ -36,53 +38,62 @@ class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
             final isMobile = constraints.maxWidth < 600;
             final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1200;
 
-            // Responsive dimensions
             final padding = isMobile ? 16.0 : (isTablet ? 24.0 : 32.0);
-            final topSpacing = isMobile ? 32.0 : (isTablet ? 40.0 : 48.0);
             final descriptionFontSize = isMobile ? 12.0 : (isTablet ? 14.0 : 16.0);
-            final spacing = isMobile ? 24.0 : (isTablet ? 28.0 : 32.0);
-            final cardSpacing = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
+            final spacing = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
 
             return SingleChildScrollView(
               padding: EdgeInsets.all(padding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: topSpacing),
+                  SizedBox(height: constraints.maxHeight * 0.05),
 
-                  // Short Description
+                  // Description Text
                   Text(
-                    'Select whether your concern relates to the service experience or the expert\'s performance.',
-                    style: AppFonts.bodyText1Style.copyWith(
-                      fontWeight: AppFonts.regular,
-                      color: AppColors.primary,
+                    'Choose an option to proceed with your complaint or view your existing complaints.',
+                    style: TextStyle(
                       fontSize: descriptionFontSize,
+                      color: Colors.black,
                     ),
+                    textAlign: TextAlign.left,
                   ),
                   SizedBox(height: spacing),
 
-                  // Complaint Options
+                  // Complaint and My Complaint Buttons side by side
                   Row(
                     children: [
                       Expanded(
-                        child: _buildOptionCard(
-                          context,
-                          'Service',
-                          Icons.miscellaneous_services_rounded,
-                          () => controller.selectComplaintType('service'),
-                          isMobile,
-                          isTablet,
+                        child: Column(
+                          children: [
+                            // Complaint Button
+                            _buildOptionCard(
+                              context,
+                              'Complaint',
+                              HugeIcons.strokeRoundedComplaint,
+                              () => controller.goToComplaint(),
+                              constraints,
+                              isMobile,
+                              isTablet,
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(width: cardSpacing),
+                      SizedBox(width: spacing),
                       Expanded(
-                        child: _buildOptionCard(
-                          context,
-                          'Expert',
-                          Icons.person_outline_rounded,
-                          () => controller.selectComplaintType('expert'),
-                          isMobile,
-                          isTablet,
+                        child: Column(
+                          children: [
+                            // My Complaint Button
+                            _buildOptionCard(
+                              context,
+                              'My Complaints',
+                              Icons.history,
+                              () => controller.goToMyComplaints(),
+                              constraints,
+                              isMobile,
+                              isTablet,
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -101,15 +112,15 @@ class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
     String title,
     IconData icon,
     VoidCallback onTap,
+    BoxConstraints constraints,
     bool isMobile,
     bool isTablet,
   ) {
-    final cardWidth = isMobile ? 170.0 : (isTablet ? 200.0 : 230.0);
-    final cardHeight = isMobile ? 114.0 : (isTablet ? 130.0 : 150.0);
-    final padding = isMobile ? 20.0 : (isTablet ? 24.0 : 28.0);
+    final cardWidth = (constraints.maxWidth - (isMobile ? 32 : (isTablet ? 48 : 64))) / 2;
+    final cardHeight = cardWidth * 0.67; // Maintain aspect ratio
     final iconSize = isMobile ? 28.0 : (isTablet ? 32.0 : 36.0);
-    final spacing = isMobile ? 12.0 : (isTablet ? 14.0 : 16.0);
     final fontSize = isMobile ? 14.0 : (isTablet ? 16.0 : 18.0);
+    final padding = isMobile ? 20.0 : (isTablet ? 24.0 : 28.0);
 
     return InkWell(
       onTap: onTap,
@@ -127,23 +138,22 @@ class ComplaintSelectionView extends GetView<ComplaintSelectionController> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 6,
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Wrap(
-          direction: Axis.vertical,
-          alignment: WrapAlignment.start,
-          crossAxisAlignment: WrapCrossAlignment.start,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
               icon,
               color: AppColors.primary,
               size: iconSize,
             ),
-            SizedBox(height: spacing),
+            SizedBox(height: isMobile ? 12 : 16),
             Text(
               title,
               style: AppFonts.bodyText1Style.copyWith(

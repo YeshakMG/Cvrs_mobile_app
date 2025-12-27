@@ -25,6 +25,10 @@ class AuthService extends GetxService {
     _initDio();
     _loadStoredTokens();
   }
+
+  Future<void> ensureInitialized() async {
+    await _loadStoredTokens();
+  }
   
   void _initDio() {
     _dio = Dio(BaseOptions(

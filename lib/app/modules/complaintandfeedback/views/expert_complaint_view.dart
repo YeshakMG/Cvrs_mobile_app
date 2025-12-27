@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import
+ 'package:get/get.dart';
 
 import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
@@ -42,61 +43,64 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
             final buttonPadding = isMobile ? 16.0 : (isTablet ? 20.0 : 24.0);
 
             return SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: padding),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Obx(() {
-                  return Column(
-                    mainAxisAlignment: controller.expertName.isEmpty
-                        ? MainAxisAlignment.center
-                        : MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                          if (controller.expertName.isEmpty)
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Please scan expert badge or upload it from file for complaint submission',
-                                  style: AppFonts.bodyText1Style.copyWith(
-                                    fontWeight: AppFonts.regular,
-                                    color: AppColors.primary,
-                                    fontSize: fontSize,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                SizedBox(height: spacing),
-                                InkWell(
-                                  onTap: controller.startScanning,
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: scanButtonPadding, horizontal: scanButtonPadding * 1.875), // 30/16 = 1.875
-                                    width: scanButtonWidth,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: AppColors.primary),
-                                      borderRadius: BorderRadius.circular(8),
+                  return IntrinsicHeight(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: padding),
+                      child: Column(
+                        mainAxisAlignment: controller.expertName.isEmpty
+                            ? MainAxisAlignment.center
+                            : MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                              if (controller.expertName.isEmpty)
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Please scan expert badge or upload it from file for complaint submission',
+                                      style: AppFonts.bodyText1Style.copyWith(
+                                        fontWeight: AppFonts.regular,
+                                        color: AppColors.primary,
+                                        fontSize: fontSize,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.qr_code_scanner,
-                                          color: AppColors.primary,
-                                          size: scanIconSize,
+                                    SizedBox(height: spacing),
+                                    InkWell(
+                                      onTap: controller.startScanning,
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: scanButtonPadding, horizontal: scanButtonPadding * 1.875), // 30/16 = 1.875
+                                        width: scanButtonWidth,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: AppColors.primary),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
-                                        SizedBox(width: spacing),
-                                        Text(
-                                          'Scan QR Code',
-                                          style: AppFonts.bodyText2Style.copyWith(
-                                            color: AppColors.primary,
-                                            fontSize: fontSize,
-                                          ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.qr_code_scanner,
+                                              color: AppColors.primary,
+                                              size: scanIconSize,
+                                            ),
+                                            SizedBox(width: spacing),
+                                            Text(
+                                              'Scan QR Code',
+                                              style: AppFonts.bodyText2Style.copyWith(
+                                                color: AppColors.primary,
+                                                fontSize: fontSize,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ],
-                            )
+                                  ],
+                                )
                           else
                             // Show expert details and form
                             Column(
@@ -290,10 +294,12 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                               ],
                             ),
                         ],
-                      );
-                    }),
-                  ),
-                );
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            );
           },
         ),
       ),

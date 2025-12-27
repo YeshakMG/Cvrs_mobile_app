@@ -140,9 +140,9 @@ class HomeController extends GetxController {
       case 2:
         Get.toNamed('/digitalcertificates');
         break;
-      // case 3:
-      //   Get.toNamed('/complaintandfeedback');
-      //   break;
+      case 3:
+        Get.toNamed('/complaintandfeedback');
+        break;
     }
   }
 

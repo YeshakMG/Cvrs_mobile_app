@@ -7,7 +7,7 @@ class ComplaintandfeedbackController extends GetxController {
 
   void selectOption(String option) {
     if (option == 'complaint') {
-      Get.toNamed('/complaintandfeedback/complaint-selection');
+      Get.toNamed('/complaintandfeedback/complaint-options');
     } else if (option == 'feedback') {
       Get.toNamed('/complaintandfeedback/feedback');
     }

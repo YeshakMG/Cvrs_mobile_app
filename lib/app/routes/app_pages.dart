@@ -5,6 +5,8 @@ import '../modules/authenticate/views/authenticate_view.dart';
 import '../modules/authenticate/views/login_view.dart' as auth_login;
 import '../modules/complaintandfeedback/bindings/complaintandfeedback_binding.dart';
 import '../modules/complaintandfeedback/views/complaintandfeedback_view.dart';
+import '../modules/complaintandfeedback/bindings/complaint_options_binding.dart';
+import '../modules/complaintandfeedback/views/complaint_options_view.dart';
 import '../modules/complaintandfeedback/bindings/complaint_selection_binding.dart';
 import '../modules/complaintandfeedback/views/complaint_selection_view.dart';
 import '../modules/complaintandfeedback/bindings/service_complaint_binding.dart';
@@ -100,44 +102,49 @@ class AppPages {
       page: () => const DigitalcertificatesView(),
       binding: DigitalcertificatesBinding(),
     ),
-    // GetPage(
-    //   name: _Paths.COMPLAINTANDFEEDBACK,
-    //   page: () => const ComplaintandfeedbackView(),
-    //   binding: ComplaintandfeedbackBinding(),
-    //   children: [
-    //     GetPage(
-    //       name: _Paths.COMPLAINT_SELECTION,
-    //       page: () => const ComplaintSelectionView(),
-    //       binding: ComplaintSelectionBinding(),
-    //       children: [
-    //         GetPage(
-    //           name: _Paths.SERVICE_COMPLAINT,
-    //           page: () => const ServiceComplaintView(),
-    //           binding: ServiceComplaintBinding(),
-    //         ),
-    //         GetPage(
-    //           name: _Paths.EXPERT_COMPLAINT,
-    //           page: () => const ExpertComplaintView(),
-    //           binding: ExpertComplaintBinding(),
-    //         ),
-    //         GetPage(
-    //           name: _Paths.MY_COMPLAINTS,
-    //           page: () => const MyComplaintsView(),
-    //           binding: MyComplaintsBinding(),
-    //         ),
-    //       ],
-    //     ),
-    //     GetPage(
-    //       name: _Paths.FEEDBACK,
-    //       page: () => const FeedbackView(),
-    //       binding: FeedbackBinding(),
-    //     ),
-    //     GetPage(
-    //       name: _Paths.QR_SCANNER,
-    //       page: () => const QRScannerView(),
-    //       binding: QRScannerBinding(),
-    //     ),
-    //   ],
-    // ),
+    GetPage(
+      name: _Paths.COMPLAINTANDFEEDBACK,
+      page: () => const ComplaintandfeedbackView(),
+      binding: ComplaintandfeedbackBinding(),
+      children: [
+        GetPage(
+          name: _Paths.COMPLAINT_OPTIONS,
+          page: () => const ComplaintOptionsView(),
+          binding: ComplaintOptionsBinding(),
+        ),
+        GetPage(
+          name: _Paths.COMPLAINT_SELECTION,
+          page: () => const ComplaintSelectionView(),
+          binding: ComplaintSelectionBinding(),
+          children: [
+            GetPage(
+              name: _Paths.SERVICE_COMPLAINT,
+              page: () => const ServiceComplaintView(),
+              binding: ServiceComplaintBinding(),
+            ),
+            GetPage(
+              name: _Paths.EXPERT_COMPLAINT,
+              page: () => const ExpertComplaintView(),
+              binding: ExpertComplaintBinding(),
+            ),
+          ],
+        ),
+        GetPage(
+          name: _Paths.MY_COMPLAINTS,
+          page: () => const MyComplaintsView(),
+          binding: MyComplaintsBinding(),
+        ),
+        GetPage(
+          name: _Paths.FEEDBACK,
+          page: () => const FeedbackView(),
+          binding: FeedbackBinding(),
+        ),
+        GetPage(
+          name: _Paths.QR_SCANNER,
+          page: () => const QRScannerView(),
+          binding: QRScannerBinding(),
+        ),
+      ],
+    ),
   ];
 }

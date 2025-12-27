@@ -21,14 +21,20 @@ void main() async {
   });
 
   // Initialize services
-  Get.put<AuthService>(AuthService(), permanent: true);
+  final authService = Get.put<AuthService>(AuthService(), permanent: true);
   Get.put<ApiService>(ApiService(), permanent: true);
   Get.put<BottomNavigationController>(BottomNavigationController(), permanent: true);
-  runApp(const MyApp());
+
+  // Wait for auth initialization
+  await authService.ensureInitialized();
+
+  runApp(MyApp(authService: authService));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final AuthService? authService;
+
+  const MyApp({super.key, this.authService});
 
   // This widget is the root of your application.
   @override
@@ -63,7 +69,7 @@ class MyApp extends StatelessWidget {
           unselectedItemColor: Colors.white70,
         ),
       ),
-      initialRoute: Routes.LOGIN,
+      initialRoute: authService?.isAuthenticated == true ? Routes.HOME : Routes.LOGIN,
       getPages: AppPages.routes,
     );
   }
