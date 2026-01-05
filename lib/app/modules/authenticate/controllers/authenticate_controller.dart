@@ -7,6 +7,7 @@ import 'package:dio/dio.dart' as dio;
 import 'package:jose/jose.dart';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
+import '../../../../services/api_service.dart';
 import '../../../../services/auth_service.dart';
 import '../views/qr_scanner_view.dart' as qr_scanner;
 
@@ -58,11 +59,9 @@ class JWKSCache {
       return _cachedJWKS!;
     }
 
-    final response = await http.get(
-      Uri.parse('https://crrsa-api.risertechservices.com/api/v1/credential-service/keys/.well-known/jwks.json'),
-    );
+    final response = await ApiService.to.get('api/v1/credential-service/keys/.well-known/jwks.json');
 
-    _cachedJWKS = jsonDecode(response.body);
+    _cachedJWKS = response.data;
     _cacheExpiry = DateTime.now().add(Duration(hours: 24));
 
     return _cachedJWKS!;

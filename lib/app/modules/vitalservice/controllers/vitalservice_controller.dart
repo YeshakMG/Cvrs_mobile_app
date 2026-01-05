@@ -88,9 +88,9 @@ class VitalService {
     }
 
     return VitalService(
-      id: json['id'] ?? json['applicationId'] ?? 'N/A',
+      id: json['id'] ?? json['applicationNumber'] ?? json['applicationId'] ?? 'N/A',
       serviceType: serviceType,
-      applicationId: json['applicationId'] ?? json['id'] ?? 'N/A',
+      applicationId: json['applicationNumber'] ?? json['applicationId'] ?? json['id'] ?? 'N/A',
       description: json['description'] ?? 'No description available',
       status: status,
       icon: icon,
@@ -174,7 +174,8 @@ class VitalserviceController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final response = await ApiService.to.get('https://crrsa-api.risertechservices.com/api/v1/portal-bff/my-requests?page=0&size=10');
+      final response = await ApiService.to.get('api/v1/portal-bff/my-requests?page=0&size=10');
+      print('Vital Services API Response Body: ${response.data}'); // Debug log
 
       if (response.statusCode == 200) {
         final data = response.data;

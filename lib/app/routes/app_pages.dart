@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 
 import '../modules/authenticate/bindings/authenticate_binding.dart';
+import '../modules/authenticate/bindings/webview_binding.dart';
 import '../modules/authenticate/views/authenticate_view.dart';
 import '../modules/authenticate/views/login_view.dart' as auth_login;
+import '../modules/authenticate/views/webview_view.dart';
 import '../modules/complaintandfeedback/bindings/complaintandfeedback_binding.dart';
 import '../modules/complaintandfeedback/views/complaintandfeedback_view.dart';
 import '../modules/complaintandfeedback/bindings/complaint_options_binding.dart';
@@ -67,6 +69,11 @@ class AppPages {
       name: _Paths.AUTHENTICATE,
       page: () => const AuthenticateView(),
       binding: AuthenticateBinding(),
+    ),
+    GetPage(
+      name: _Paths.WEBVIEW,
+      page: () => const WebviewView(),
+      binding: WebviewBinding(),
     ),
     GetPage(
       name: _Paths.SETTINGS,

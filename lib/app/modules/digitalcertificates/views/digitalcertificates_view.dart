@@ -5,6 +5,8 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:pdfx/pdfx.dart';
+import 'package:pdf/pdf.dart' as pw;
+import 'package:pdf/widgets.dart' as pw;
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
@@ -325,10 +327,101 @@ Widget _buildCertificateCard(CertificateService certificate) {
 }
 
 
-  void _shareCertificate(CertificateService certificate) {
-    Share.share(
-      'Check out this ${certificate.name} from ${certificate.type} services!',
-      subject: certificate.name,
+  Future<void> _shareCertificate(CertificateService certificate) async {
+    try {
+      // Show loading
+      Get.snackbar(
+        'Preparing to Share',
+        'Generating PDF for ${certificate.name}...',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+
+      // Generate PDF
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.Page(
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  certificate.name,
+                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 20),
+                pw.Text('Type: ${certificate.type}', style: pw.TextStyle(fontSize: 16)),
+                pw.SizedBox(height: 10),
+                if (certificate.expiryHours != null)
+                  pw.Text('Expires in: ${certificate.expiryHours} hours', style: pw.TextStyle(fontSize: 14, color: pw.PdfColors.orange)),
+                pw.SizedBox(height: 20),
+                pw.Text('Certificate Details:', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 10),
+                _buildPdfDetailRow('ID No:', certificate.payload['idNo'] ?? 'N/A'),
+                _buildPdfDetailRow('Full Name:', certificate.payload['fullName'] ?? 'N/A'),
+                _buildPdfDetailRow('Date of Birth:', certificate.payload['dob'] ?? 'N/A'),
+                _buildPdfDetailRow('Sex:', certificate.payload['sex'] ?? 'N/A'),
+                _buildPdfDetailRow('Blood Type:', certificate.payload['bloodType'] ?? 'N/A'),
+                _buildPdfDetailRow('Issue Date:', certificate.payload['issueDate'] ?? 'N/A'),
+                _buildPdfDetailRow('Expiry Date:', certificate.payload['expiryDate'] ?? 'N/A'),
+                _buildPdfDetailRow('Registration No:', certificate.payload['regNo'] ?? 'N/A'),
+                _buildPdfDetailRow('Woreda:', certificate.payload['woredaen'] ?? 'N/A'),
+                _buildPdfDetailRow('Subcity:', certificate.payload['subcityen'] ?? 'N/A'),
+                if (certificate.payload['motherNameen'] != null)
+                  _buildPdfDetailRow('Mother Name:', certificate.payload['motherNameen']),
+              ],
+            );
+          },
+        ),
+      );
+
+      // Get temp directory
+      final directory = await getTemporaryDirectory();
+      final fileName = '${certificate.name.replaceAll(' ', '_')}_certificate.pdf';
+      final filePath = '${directory.path}/$fileName';
+
+      // Save PDF to file
+      final file = File(filePath);
+      await file.writeAsBytes(await pdf.save());
+
+      print('Share - PDF generated and saved to: $filePath');
+
+      // Share the PDF
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        text: 'Check out this ${certificate.name} from ${certificate.type} services!',
+        subject: certificate.name,
+      );
+    } catch (e) {
+      print('Share error: $e');
+      Get.snackbar(
+        'Share Failed',
+        'Error generating PDF for ${certificate.name}: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 4),
+      );
+    }
+  }
+
+  pw.Widget _buildPdfDetailRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 8),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: 120,
+            child: pw.Text(
+              label,
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Text(value),
+          ),
+        ],
+      ),
     );
   }
 

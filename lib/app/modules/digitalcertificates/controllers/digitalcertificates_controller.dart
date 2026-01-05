@@ -63,8 +63,8 @@ class DigitalcertificatesController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      print('DEBUG: Making API call to https://crrsa-test.aacrrsa.gov.et/api/v1/portal-bff/my-certificates');
-      final response = await ApiService.to.get('https://crrsa-api.risertechservices.com/api/v1/portal-bff/my-certificates', queryParameters: {
+      print('DEBUG: Making API call to api/v1/portal-bff/my-certificates');
+      final response = await ApiService.to.get('api/v1/portal-bff/my-certificates', queryParameters: {
         'page': 0,
         'size': 10,
       });

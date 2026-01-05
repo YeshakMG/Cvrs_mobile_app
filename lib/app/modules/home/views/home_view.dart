@@ -6,6 +6,9 @@ import '../../../constants/fonts.dart';
 import '../../../../widgets/bottom_navigation.dart';
 import '../../../../services/auth_service.dart';
 import '../controllers/home_controller.dart';
+import '../../residentid/controllers/residentid_controller.dart';
+import '../../vitalservice/controllers/vitalservice_controller.dart';
+import '../../../routes/app_pages.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -450,11 +453,13 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildCheckStatusSection(bool isMobile, bool isTablet) {
-    final fieldHeight = isMobile ? 36.0 : (isTablet ? 40.0 : 44.0);
+    final fieldHeight = isMobile ? 70.0 : (isTablet ? 90.0 : 110.0);
     final buttonSize = isMobile ? 40.0 : (isTablet ? 44.0 : 48.0);
     final iconSize = isMobile ? 28.0 : (isTablet ? 30.0 : 32.0);
     final fontSize = isMobile ? null : (isTablet ? 14.0 : 16.0);
     final spacing = isMobile ? 1.0 : 2.0;
+
+    final TextEditingController searchController = TextEditingController();
 
     return Container(
       width: double.infinity,
@@ -471,16 +476,17 @@ class HomeView extends GetView<HomeController> {
         children: [
           Expanded(
             child: TextField(
-              cursorHeight: 10.0,
+              controller: searchController,
+              cursorHeight: 20.0,
               decoration: InputDecoration(
                 border: InputBorder.none,
-                labelText: 'Enter Code',
+                labelText: 'Application Number',
                 labelStyle: AppFonts.captionStyle.copyWith(
                   fontWeight: AppFonts.medium,
                   color: AppColors.tertiary,
                   fontSize: fontSize,
                 ),
-                hintText: 'MB XXXXXXXX ET',
+                hintText: '',
                 hintStyle: AppFonts.bodyText2Style.copyWith(
                   color: Colors.black54,
                   fontSize: 10.0,
@@ -506,13 +512,78 @@ class HomeView extends GetView<HomeController> {
                 size: iconSize,
               ),
               onPressed: () {
-                // Handle check status action
+                final searchText = searchController.text.trim();
+                if (searchText.isNotEmpty) {
+                  _searchApplicationNumber(searchText);
+                } else {
+                  Get.snackbar('Error', 'Please enter an application number');
+                }
               },
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _searchApplicationNumber(String applicationNumber) {
+    print('Search Application Number: Starting search for "$applicationNumber"');
+    try {
+      // Ensure controllers are initialized
+      ResidentidController? residentController;
+      VitalserviceController? vitalController;
+
+      try {
+        residentController = Get.find<ResidentidController>();
+        print('Search Application Number: Resident controller found');
+      } catch (e) {
+        print('Search Application Number: Resident controller not found, creating new instance');
+        residentController = Get.put(ResidentidController());
+      }
+
+      try {
+        vitalController = Get.find<VitalserviceController>();
+        print('Search Application Number: Vital controller found');
+      } catch (e) {
+        print('Search Application Number: Vital controller not found, creating new instance');
+        vitalController = Get.put(VitalserviceController());
+      }
+
+      // First check resident services
+      print('Search Application Number: Checking resident services...');
+      print('Search Application Number: Found ${residentController!.allServices.length} resident services');
+
+      final residentService = residentController.allServices.firstWhereOrNull(
+        (service) => service.applicationId.toLowerCase() == applicationNumber.toLowerCase(),
+      );
+
+      if (residentService != null) {
+        print('Search Application Number: Found in resident services - ${residentService.applicationId}');
+        Get.toNamed(Routes.SERVICE_DETAIL, arguments: residentService);
+        return;
+      }
+
+      // Then check vital services
+      print('Search Application Number: Checking vital services...');
+      print('Search Application Number: Found ${vitalController!.allServices.length} vital services');
+
+      final vitalService = vitalController.allServices.firstWhereOrNull(
+        (service) => service.applicationId.toLowerCase() == applicationNumber.toLowerCase(),
+      );
+
+      if (vitalService != null) {
+        print('Search Application Number: Found in vital services - ${vitalService.applicationId}');
+        Get.toNamed(Routes.VITALSERVICE_SERVICE_DETAIL, arguments: vitalService);
+        return;
+      }
+
+      // If not found in either
+      print('Search Application Number: Application number "$applicationNumber" not found in any services');
+      Get.snackbar('Not Found', 'Application number not found in your requests');
+    } catch (e) {
+      print('Search Application Number: Error occurred - $e');
+      Get.snackbar('Error', 'Unable to search application number: $e');
+    }
   }
 
   Widget _serviceCard(IconData icon, String title, String description, VoidCallback onTap, bool isMobile, bool isTablet) {

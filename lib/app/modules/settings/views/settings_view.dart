@@ -271,10 +271,11 @@ class SettingsView extends GetView<SettingsController> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
               ),
-              onPressed: () {
+              onPressed: () async {
+                print('Logout confirmed');
                 Navigator.of(context).pop(); // Close dialog
                 // Clear user data and navigate to login
-                AuthService.to.logout();
+                await AuthService.to.logout();
                 Get.offAllNamed('/login');
               },
               child: const Text(

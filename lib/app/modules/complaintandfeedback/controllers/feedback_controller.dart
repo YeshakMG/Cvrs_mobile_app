@@ -116,7 +116,7 @@ class FeedbackController extends GetxController {
     rating.value = value;
   }
 
-  Future<void> submitFeedback() async {
+  void submitFeedback() {
     if (rating.value == 0) {
       Get.snackbar('Error', 'Please rate the expert before submitting.');
       return;
@@ -134,6 +134,18 @@ class FeedbackController extends GetxController {
       return;
     }
 
+    // Show confirmation dialog
+    Get.defaultDialog(
+      title: 'Confirm Submission',
+      middleText: 'Are you sure you want to send the feedback?',
+      textConfirm: 'Yes',
+      textCancel: 'Cancel',
+      confirmTextColor: Colors.white,
+      onConfirm: () => _performSubmit(),
+    );
+  }
+
+  Future<void> _performSubmit() async {
     isLoading.value = true;
 
     try {
@@ -163,7 +175,17 @@ class FeedbackController extends GetxController {
 
     } catch (e) {
       print('Feedback Submit Error: $e');
-      Get.snackbar('Error', 'Failed to submit feedback. Please try again.');
+      if (e is dio.DioException && e.response?.statusCode == 400) {
+        Get.defaultDialog(
+          title: 'Error',
+          middleText: 'You have already provided feedback for this user.',
+          textConfirm: 'OK',
+          confirmTextColor: Colors.white,
+          onConfirm: () => Get.close(2), // Close all dialogs
+        );
+      } else {
+        Get.snackbar('Error', 'Failed to submit feedback. Please try again.');
+      }
     } finally {
       isLoading.value = false;
     }

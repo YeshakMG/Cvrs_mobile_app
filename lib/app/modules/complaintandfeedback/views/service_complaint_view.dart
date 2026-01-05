@@ -450,6 +450,10 @@ class ServiceComplaintView extends GetView<ServiceComplaintController> {
                               ),
                             ),
                             IconButton(
+                              onPressed: () => controller.viewAttachment(entry.key),
+                              icon: Icon(Icons.visibility, size: iconSize * 0.8),
+                            ),
+                            IconButton(
                               onPressed: () => controller.removeAttachment(entry.key),
                               icon: Icon(Icons.close, size: iconSize * 0.8),
                             ),

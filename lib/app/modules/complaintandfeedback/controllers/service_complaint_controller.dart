@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart' as dio;
+import 'package:pdfx/pdfx.dart';
+import 'package:open_file/open_file.dart';
 import '../../../../services/api_service.dart';
 import '../../../../services/auth_service.dart';
 
@@ -392,7 +394,12 @@ class ServiceComplaintController extends GetxController {
     attachmentIds.removeAt(index);
   }
 
-  Future<void> submitComplaint() async {
+  void viewAttachment(int index) {
+    final file = selectedFiles[index];
+    OpenFile.open(file.path);
+  }
+
+  void submitComplaint() {
     print('Submit Complaint called');
     // Clear previous errors
     serviceTypeError.value = '';
@@ -433,6 +440,18 @@ class ServiceComplaintController extends GetxController {
       return;
     }
 
+    // Show confirmation dialog
+    Get.defaultDialog(
+      title: 'Confirm Submission',
+      middleText: 'Are you sure you want to send the complaint?',
+      textConfirm: 'Yes',
+      textCancel: 'Cancel',
+      confirmTextColor: Colors.white,
+      onConfirm: () => _performSubmit(),
+    );
+  }
+
+  Future<void> _performSubmit() async {
     // Submit complaint to backend
     try {
       final data = {

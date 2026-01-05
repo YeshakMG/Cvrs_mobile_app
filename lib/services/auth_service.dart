@@ -9,7 +9,7 @@ class AuthService extends GetxService {
   
   late final Dio _dio;
   final String baseUrl = 'https://crrsa-auth.risertechservices.com/';
-  final String clientId = 'crrsa-portal-client';
+  final String clientId = 'crrsa-mobile-client';
   final String clientSecret = '6fZk1WfC6PSfeGzNvUYd5plveBhcC45q';
   
   // Token storage
@@ -75,7 +75,7 @@ class AuthService extends GetxService {
         'name': 'Test User',
         'preferred_username': 'User',
       };
-      await _storeTokens();
+      await storeTokens();
       return true;
     }
 
@@ -118,7 +118,7 @@ class AuthService extends GetxService {
         }
 
         // Store tokens
-        await _storeTokens();
+        await storeTokens();
 
         return true;
       }
@@ -134,6 +134,61 @@ class AuthService extends GetxService {
     }
   }
   
+  Future<bool> exchangeCodeForTokens(String code, String redirectUri) async {
+    try {
+      final response = await _dio.post(
+        '/realms/crrsa-external/protocol/openid-connect/token',
+        data: {
+          'client_id': clientId,
+          'grant_type': 'authorization_code',
+          'code': code,
+          'redirect_uri': redirectUri,
+        },
+        options: Options(
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        print('Token exchange response: $data');
+        accessToken.value = data['access_token'] ?? '';
+        refreshToken.value = data['refresh_token'] ?? '';
+        tokenExpiresIn.value = data['expires_in'] ?? 0;
+
+        // Decode user info from access token
+        if (accessToken.value.isNotEmpty) {
+          try {
+            final parts = accessToken.value.split('.');
+            if (parts.length == 3) {
+              final payload = json.decode(utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))));
+              currentUser.value = payload;
+              print('Current user: $payload');
+            }
+          } catch (e) {
+            print('Error decoding token: $e');
+          }
+        }
+
+        // Store tokens
+        await storeTokens();
+
+        return true;
+      }
+      return false;
+    } on DioException catch (e) {
+      print('Code exchange error: ${e.response?.data ?? e.message}');
+      errorMessage.value = e.response?.data?.toString() ?? (e.message ?? 'Unknown error');
+      return false;
+    } catch (e) {
+      print('Code exchange error: $e');
+      errorMessage.value = e.toString();
+      return false;
+    }
+  }
+
   Future<bool> refreshAccessToken() async {
     try {
       final response = await _dio.post(
@@ -158,7 +213,7 @@ class AuthService extends GetxService {
         tokenExpiresIn.value = data['expires_in'] ?? 0;
         
         // Update stored tokens
-        await _storeTokens();
+        await storeTokens();
         return true;
       }
       return false;
@@ -170,6 +225,29 @@ class AuthService extends GetxService {
   }
   
   Future<void> logout() async {
+    try {
+      // Perform Keycloak logout if we have a refresh token
+      if (refreshToken.value.isNotEmpty) {
+        await _dio.post(
+          '/realms/crrsa-external/protocol/openid-connect/logout',
+          data: {
+            'client_id': clientId,
+            'client_secret': clientSecret,
+            'refresh_token': refreshToken.value,
+          },
+          options: Options(
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+          ),
+        );
+      }
+    } catch (e) {
+      print('Logout error: $e');
+      // Continue with local logout even if server logout fails
+    }
+
+    // Clear local tokens
     accessToken.value = '';
     refreshToken.value = '';
     tokenExpiresIn.value = 0;
@@ -184,7 +262,7 @@ class AuthService extends GetxService {
   
   bool get isAuthenticated => accessToken.value.isNotEmpty;
   
-  Future<void> _storeTokens() async {
+  Future<void> storeTokens() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('access_token', accessToken.value);
     await prefs.setString('refresh_token', refreshToken.value);

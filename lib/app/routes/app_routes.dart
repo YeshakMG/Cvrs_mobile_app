@@ -18,6 +18,7 @@ abstract class Routes {
   static const MY_COMPLAINTS = _Paths.MY_COMPLAINTS;
   static const FEEDBACK = _Paths.FEEDBACK;
   static const QR_SCANNER = _Paths.QR_SCANNER;
+  static const WEBVIEW = _Paths.WEBVIEW;
   static const SERVICE_DETAIL = _Paths.RESIDENTID + _Paths.SERVICE_DETAIL;
   static const VITALSERVICE_SERVICE_DETAIL = _Paths.VITALSERVICE + _Paths.SERVICE_DETAIL;
 }
@@ -40,5 +41,6 @@ abstract class _Paths {
   static const MY_COMPLAINTS = '/my-complaints';
   static const FEEDBACK = '/feedback';
   static const QR_SCANNER = '/qr-scanner';
+  static const WEBVIEW = '/webview';
   static const SERVICE_DETAIL = '/service-detail';
 }

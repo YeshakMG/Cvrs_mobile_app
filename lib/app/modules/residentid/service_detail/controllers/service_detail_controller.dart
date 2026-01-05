@@ -218,7 +218,7 @@ class ServiceDetailController extends GetxController {
       isLoading.value = true;
 
       final response = await ApiService.to.get(
-        'https://crrsa-test.aacrrsa.gov.et/api/v1/portal-bff/my-requests/${service.id}/detail?page=0&size=10'
+        'api/v1/portal-bff/my-requests/${service.id}/detail?page=0&size=10'
       );
 
       if (response.statusCode == 200) {

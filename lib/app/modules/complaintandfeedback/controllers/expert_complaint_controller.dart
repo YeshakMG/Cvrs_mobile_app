@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:dio/dio.dart' as dio;
+import 'package:open_file/open_file.dart';
 
 import '../../../../services/api_service.dart';
 import '../views/expert_complaint_scan_view.dart';
@@ -209,8 +210,13 @@ class ExpertComplaintController extends GetxController {
     attachmentIds.removeAt(index);
   }
 
+  void viewAttachment(int index) {
+    final file = selectedFiles[index];
+    OpenFile.open(file.path);
+  }
+
   // Submit Complaint
-  Future<void> submitComplaint() async {
+  void submitComplaint() {
     if (expertName.isEmpty) {
       Get.snackbar('Error', 'Please scan or upload expert badge first');
       return;
@@ -220,6 +226,18 @@ class ExpertComplaintController extends GetxController {
       return;
     }
 
+    // Show confirmation dialog
+    Get.defaultDialog(
+      title: 'Confirm Submission',
+      middleText: 'Are you sure you want to send the complaint?',
+      textConfirm: 'Yes',
+      textCancel: 'Cancel',
+      confirmTextColor: Colors.white,
+      onConfirm: () => _performSubmit(),
+    );
+  }
+
+  Future<void> _performSubmit() async {
     isLoading.value = true;
 
     try {

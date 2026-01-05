@@ -219,6 +219,10 @@ class ExpertComplaintView extends GetView<ExpertComplaintController> {
                                                 ),
                                               ),
                                               IconButton(
+                                                onPressed: () => controller.viewAttachment(entry.key),
+                                                icon: Icon(Icons.visibility, size: isMobile ? 20.0 : (isTablet ? 22.0 : 24.0)),
+                                              ),
+                                              IconButton(
                                                 onPressed: () => controller.removeAttachment(entry.key),
                                                 icon: Icon(Icons.close, size: isMobile ? 20.0 : (isTablet ? 22.0 : 24.0)),
                                               ),
