@@ -7,6 +7,7 @@ class CertificateService {
   final String type;
   final String? expiryHours;
   final Map<String, dynamic> payload;
+  final String? credentialType;
 
   CertificateService({
     required this.name,
@@ -14,28 +15,52 @@ class CertificateService {
     required this.type,
     this.expiryHours,
     required this.payload,
+    this.credentialType,
   });
 
-  factory CertificateService.fromJson(Map<String, dynamic> json) {
+  static CertificateService? fromJson(Map<String, dynamic> json) {
     final payload = json['payload'] as Map<String, dynamic>? ?? {};
+    final credentialData = payload['credentialData'] as Map<String, dynamic>? ?? {};
 
-    // Determine certificate type based on payload data
-    String type = 'Certificate';
-    String name = 'Digital Certificate';
-    if (payload['idNo'] != null && payload['idNo'].toString().startsWith('ID/')) {
+    // Determine certificate type and name based on payload data
+    String? type;
+    String? name;
+    String? credentialTypeValue = payload['credentialType']?.toString();
+
+    if (credentialTypeValue == 'BIRTH_CERT' || credentialData['Registration Number'] != null) {
+      type = 'Vital';
+      name = 'Birth Certificate';
+    } else if (payload['subjectId'] != null && payload['subjectId'].toString().startsWith('ID/')) {
       type = 'Resident';
       name = 'Resident ID Certificate';
-    } else if (payload['regNo'] != null && payload['regNo'].toString().isNotEmpty) {
-      type = 'Vital';
-      name = 'Vital Certificate';
+    } else if (credentialTypeValue != null) {
+      // Use credentialType to determine name
+      switch (credentialTypeValue) {
+        case 'BIRTH_CERT':
+          name = 'Birth Certificate';
+          type = 'Vital';
+          break;
+        // Add other cases as needed
+        default:
+          // Unknown credentialType, don't create certificate
+          return null;
+      }
+    } else {
+      // No identifiable type, don't create certificate
+      return null;
+    }
+
+    if (type == null || name == null) {
+      return null;
     }
 
     return CertificateService(
       name: name,
-      downloadUrl: json['downloadUrl'] ?? '',
+      downloadUrl: json['fileUrl'] ?? '',
       type: type,
-      expiryHours: json['expiryHours']?.toString(),
+      expiryHours: json['expiryDate']?.toString(),
       payload: payload,
+      credentialType: payload['credentialType']?.toString(),
     );
   }
 }
@@ -63,11 +88,8 @@ class DigitalcertificatesController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      print('DEBUG: Making API call to api/v1/portal-bff/my-certificates');
-      final response = await ApiService.to.get('api/v1/portal-bff/my-certificates', queryParameters: {
-        'page': 0,
-        'size': 10,
-      });
+      print('DEBUG: Making API call to citizen-app-service/my-certificates');
+      final response = await ApiService.to.get('citizen-app-service/my-certificates');
       print('DEBUG: API call completed, status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
@@ -78,10 +100,12 @@ class DigitalcertificatesController extends GetxController {
         List<dynamic> certificatesJson = [];
 
         if (data is Map<String, dynamic> && data.containsKey('data')) {
-          certificatesJson = data['data'] ?? [];
-        } else if (data is List) {
-          certificatesJson = data;
-        }
+           certificatesJson = data['data'] ?? [];
+         } else if (data is List) {
+           certificatesJson = data;
+         }
+
+         print('Certificates API Response Data: $certificatesJson');
 
         if (certificatesJson is! List) {
           certificatesJson = [];
@@ -91,25 +115,19 @@ class DigitalcertificatesController extends GetxController {
         List<CertificateService> foundCertificates = [];
         for (var json in certificatesJson) {
           if (json is Map<String, dynamic>) {
-            foundCertificates.add(CertificateService.fromJson(json));
+            final cert = CertificateService.fromJson(json);
+            if (cert != null) foundCertificates.add(cert);
           }
         }
 
-        if (foundCertificates.isEmpty) {
-          // Fallback to sample data if no certificates found
-          _loadSampleData();
-        } else {
-          certificates.value = foundCertificates;
-        }
+        certificates.value = foundCertificates;
       } else {
         errorMessage.value = 'Failed to load certificates: ${response.statusCode}';
-        _loadSampleData();
       }
     } catch (e) {
       print('DEBUG: Exception in fetchCertificates: $e');
       errorMessage.value = 'Error fetching certificates: $e';
       print('Certificates error: $e');
-      _loadSampleData();
     } finally {
       print('DEBUG: Setting loading to false');
       isLoading.value = false;
@@ -117,41 +135,6 @@ class DigitalcertificatesController extends GetxController {
   }
 
 
-  void _loadSampleData() {
-    // Sample data - test with real signed URL
-    certificates.value = [
-      CertificateService(
-        name: 'Test Certificate',
-        downloadUrl: 'https://crrsa-storage-test.aacrrsa.gov.et/public-files/f0444b18-65d6-4ed3-9f95-b609b8332599.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=5h6upTqkKAP1%2F20251203%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251203T081538Z&X-Amz-Expires=43200&X-Amz-SignedHeaders=host&X-Amz-Signature=41518d7548131c4b68dae7d4875d358228463a6504a04c126228a958c9123d8d',
-        type: 'Test',
-        payload: {},
-      ),
-      CertificateService(
-        name: 'Birth Certificate',
-        downloadUrl: '', // Empty URL - will show icon
-        type: 'Vital',
-        payload: {},
-      ),
-      CertificateService(
-        name: 'Death Certificate',
-        downloadUrl: '', // Empty URL - will show icon
-        type: 'Vital',
-        payload: {},
-      ),
-      CertificateService(
-        name: 'Marriage Certificate',
-        downloadUrl: '', // Empty URL - will show icon
-        type: 'Vital',
-        payload: {},
-      ),
-      CertificateService(
-        name: 'Resident ID',
-        downloadUrl: '', // Empty URL - will show icon
-        type: 'Resident',
-        payload: {},
-      ),
-    ];
-  }
 
   @override
   void onReady() {

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:jose/jose.dart';
 import 'package:archive/archive.dart';
@@ -18,6 +19,8 @@ class AuthenticatedUser {
   final String address;
   final String phoneNo;
   final String nationality;
+  final String expiryDate;
+  final Map<String, dynamic>? credentialSubject;
 
   AuthenticatedUser({
     required this.certificateNo,
@@ -26,6 +29,8 @@ class AuthenticatedUser {
     required this.address,
     required this.phoneNo,
     required this.nationality,
+    required this.expiryDate,
+    this.credentialSubject,
   });
 }
 
@@ -59,7 +64,7 @@ class JWKSCache {
       return _cachedJWKS!;
     }
 
-    final response = await ApiService.to.get('api/v1/credential-service/keys/.well-known/jwks.json');
+    final response = await ApiService.to.get('citizen-app-service/credential-service/keys/.well-known/jwks.json');
 
     _cachedJWKS = response.data;
     _cacheExpiry = DateTime.now().add(Duration(hours: 24));
@@ -251,6 +256,10 @@ class AuthenticateController extends GetxController {
     super.onClose();
   }
 
+  void _playSuccessSound() {
+    SystemSound.play(SystemSoundType.alert);
+  }
+
   void scanQRCode() async {
     try {
       print('Reading: Starting QR code scan...');
@@ -321,15 +330,18 @@ class AuthenticateController extends GetxController {
             print(credentialData);
 
             authenticatedUser.value = AuthenticatedUser(
-              certificateNo: credentialData['registrationNo'] ?? credentialData['residentId'] ?? scannedData,
-              fullName: credentialData['fullNameEn'] ?? 'Unknown',
-              dateOfBirth: credentialData['dob'] ?? 'Unknown',
+              certificateNo: credentialData['Registration Number'] ?? credentialData['registrationNo'] ?? credentialData['residentId'] ?? scannedData,
+              fullName: credentialData['fullNameEn'] ?? credentialData['Full Name'] ?? 'Unknown',
+              dateOfBirth: credentialData['Date of Birth'] ?? credentialData['dob'] ?? 'Unknown',
               address: credentialData['address'] ?? 'Unknown',
               phoneNo: credentialData['phoneNo'] ?? 'N/A',
-              nationality: credentialData['nationality'] ?? 'Ethiopian',
+              nationality: credentialData['Nationality'] ?? credentialData['nationality'] ?? 'Ethiopian',
+              expiryDate: data['expiryDate'] ?? 'Unknown',
+              credentialSubject: credentialData,
             );
-            certificateId.value = credentialData['registrationNo'] ?? credentialData['residentId'] ?? scannedData;
+            certificateId.value = credentialData['Registration Number'] ?? credentialData['registrationNo'] ?? credentialData['residentId'] ?? scannedData;
             isAuthenticated.value = true;
+            _playSuccessSound();
             print('Step 8: Authentication successful');
             Get.snackbar(
               'Success',
@@ -394,30 +406,78 @@ class AuthenticateController extends GetxController {
 
     isLoading.value = true;
 
-    // Simulate authentication process
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final response = await ApiService.to.get('citizen-app-service/common/certificates/verify?certificateNumber=${certificateId.value}');
 
-    // For demo purposes, authenticate if certificate ID is not empty
-    isAuthenticated.value = true;
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        print('Certificate verification API response received:');
+        print('Full response body: $apiResponse');
+        print('Response data details:');
+        print('- success: ${apiResponse['success']}');
+        print('- message: ${apiResponse['message']}');
 
-    // Create dummy authenticated user data
-    authenticatedUser.value = AuthenticatedUser(
-      certificateNo: certificateId.value,
-      fullName: 'Isaac Mesfin',
-      dateOfBirth: '1990-01-15',
-      address: 'Addis Ababa, Ethiopia',
-      phoneNo: '+251 912 345 678',
-      nationality: 'Ethiopian',
-    );
+        final data = apiResponse['data'];
+        if (data != null) {
+          print('Data object contents:');
+          data.forEach((key, value) {
+            print('  $key: $value');
+          });
+        }
 
-    isLoading.value = false;
+        if (apiResponse['timestamp'] != null) {
+          print('- timestamp: ${apiResponse['timestamp']}');
+        }
 
-    Get.snackbar(
-      'Success',
-      'Certificate authenticated successfully',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
+        if (apiResponse['success'] == true) {
+          final data = apiResponse['data'];
+          final payload = data['payload'];
+          final credentialData = payload['credentialData'];
+
+          authenticatedUser.value = AuthenticatedUser(
+            certificateNo: credentialData['registrationNo'] ?? certificateId.value,
+            fullName: credentialData['fullNameEn'] ?? credentialData['fullNameAm'] ?? 'Unknown',
+            dateOfBirth: 'N/A', // Not provided in response
+            address: credentialData['address'] ?? 'Unknown',
+            phoneNo: 'N/A', // Not provided in response
+            nationality: 'Ethiopian', // Default
+            expiryDate: data['expiryDate'] ?? 'Unknown',
+            credentialSubject: credentialData,
+          );
+
+          isAuthenticated.value = true;
+          _playSuccessSound();
+
+          Get.snackbar(
+            'Success',
+            apiResponse['message'] ?? 'Certificate authenticated successfully',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+        } else {
+          Get.snackbar(
+            'Error',
+            apiResponse['message'] ?? 'Certificate verification failed',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        }
+      } else {
+        throw Exception('API request failed with status ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Certificate verification error: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to verify certificate: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

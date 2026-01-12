@@ -281,6 +281,35 @@ Widget _buildCertificateCard(CertificateService certificate) {
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
+              ...certificate.payload.entries.where((entry) => entry.value != null && entry.value.toString().isNotEmpty && entry.key != 'img' && entry.key != 'signiture').map((entry) => Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 80,
+                      child: Text(
+                        '${_formatKey(entry.key)}:',
+                        style: AppFonts.bodyText2Style.copyWith(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        entry.value.toString(),
+                        style: AppFonts.bodyText2Style.copyWith(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              )),
               if (certificate.expiryHours != null) ...[
                 const SizedBox(height: 2),
                 Text(
@@ -358,18 +387,7 @@ Widget _buildCertificateCard(CertificateService certificate) {
                 pw.SizedBox(height: 20),
                 pw.Text('Certificate Details:', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 10),
-                _buildPdfDetailRow('ID No:', certificate.payload['idNo'] ?? 'N/A'),
-                _buildPdfDetailRow('Full Name:', certificate.payload['fullName'] ?? 'N/A'),
-                _buildPdfDetailRow('Date of Birth:', certificate.payload['dob'] ?? 'N/A'),
-                _buildPdfDetailRow('Sex:', certificate.payload['sex'] ?? 'N/A'),
-                _buildPdfDetailRow('Blood Type:', certificate.payload['bloodType'] ?? 'N/A'),
-                _buildPdfDetailRow('Issue Date:', certificate.payload['issueDate'] ?? 'N/A'),
-                _buildPdfDetailRow('Expiry Date:', certificate.payload['expiryDate'] ?? 'N/A'),
-                _buildPdfDetailRow('Registration No:', certificate.payload['regNo'] ?? 'N/A'),
-                _buildPdfDetailRow('Woreda:', certificate.payload['woredaen'] ?? 'N/A'),
-                _buildPdfDetailRow('Subcity:', certificate.payload['subcityen'] ?? 'N/A'),
-                if (certificate.payload['motherNameen'] != null)
-                  _buildPdfDetailRow('Mother Name:', certificate.payload['motherNameen']),
+                ...certificate.payload.entries.where((entry) => entry.value != null && entry.value.toString().isNotEmpty && entry.key != 'img' && entry.key != 'signiture').map((entry) => _buildPdfDetailRow(_formatKey(entry.key), entry.value.toString())),
               ],
             );
           },
@@ -637,6 +655,16 @@ Widget _buildCertificateCard(CertificateService certificate) {
     }
   }
 
+  String _formatKey(String key) {
+    // Convert camelCase to Title Case with spaces
+    String formatted = key.replaceAllMapped(
+      RegExp(r'([a-z])([A-Z])'),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    // Capitalize each word
+    return formatted.split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1).toLowerCase() : word).join(' ');
+  }
+
   Future<Uint8List> _generatePdfPreviewImage(Uint8List pdfBytes) async {
     try {
       print('Generating PDF preview image from ${pdfBytes.length} bytes');
@@ -691,84 +719,122 @@ Widget _buildCertificateCard(CertificateService certificate) {
     // Show certificate details dialog
     Get.dialog(
       Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           constraints: BoxConstraints(
-            maxHeight: Get.height * 0.8,
-            maxWidth: Get.width * 0.9,
+            maxHeight: Get.height * 0.9,
+            maxWidth: Get.width * 0.95,
+          ),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.primary, width: 3),
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.white,
           ),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Certificate Preview',
+                      style: AppFonts.bodyText1Style.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Certificate Title
                 Text(
                   certificate.name,
                   style: AppFonts.bodyText1Style.copyWith(
-                    fontWeight: AppFonts.semiBold,
+                    fontWeight: FontWeight.bold,
                     color: AppColors.primary,
-                    fontSize: 18,
+                    fontSize: 22,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
+                // Certificate Type
+                Text(
+                  'Type: ${certificate.type}',
+                  style: AppFonts.bodyText2Style.copyWith(
+                    color: Colors.grey[700],
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
                 // Display certificate image if available
                 if (certificate.payload['img'] != null && certificate.payload['img'].toString().isNotEmpty)
                   Container(
-                    height: 150,
+                    height: 180,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[300]!, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                       child: Image.network(
                         certificate.payload['img'],
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Center(
-                          child: Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey[100],
+                          child: const Center(
+                            child: Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 // Certificate details
-                _buildDetailRow('ID No:', certificate.payload['idNo'] ?? 'N/A'),
-                _buildDetailRow('Full Name:', certificate.payload['fullName'] ?? 'N/A'),
-                _buildDetailRow('Date of Birth:', certificate.payload['dob'] ?? 'N/A'),
-                _buildDetailRow('Sex:', certificate.payload['sex'] ?? 'N/A'),
-                _buildDetailRow('Blood Type:', certificate.payload['bloodType'] ?? 'N/A'),
-                _buildDetailRow('Issue Date:', certificate.payload['issueDate'] ?? 'N/A'),
-                _buildDetailRow('Expiry Date:', certificate.payload['expiryDate'] ?? 'N/A'),
-                _buildDetailRow('Registration No:', certificate.payload['regNo'] ?? 'N/A'),
-                _buildDetailRow('Woreda:', certificate.payload['woredaen'] ?? 'N/A'),
-                _buildDetailRow('Subcity:', certificate.payload['subcityen'] ?? 'N/A'),
-                if (certificate.payload['motherNameen'] != null)
-                  _buildDetailRow('Mother Name:', certificate.payload['motherNameen']),
-                const SizedBox(height: 16),
+                ..._buildPayloadRows(certificate.payload),
                 // Signature if available
                 if (certificate.payload['signiture'] != null && certificate.payload['signiture'].toString().isNotEmpty)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: 16),
                       Text(
-                        'Signature:',
+                        'Signature',
                         style: AppFonts.bodyText2Style.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,
+                          fontSize: 16,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        height: 80,
+                        height: 100,
                         width: double.infinity,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey[300]!),
+                          border: Border.all(color: Colors.grey[300]!, width: 2),
+                          color: Colors.grey[50],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(6),
                           child: Image.network(
                             certificate.payload['signiture'],
                             fit: BoxFit.contain,
@@ -780,7 +846,8 @@ Widget _buildCertificateCard(CertificateService certificate) {
                       ),
                     ],
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
+                // Action buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -794,6 +861,10 @@ Widget _buildCertificateCard(CertificateService certificate) {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                     ElevatedButton(
@@ -801,6 +872,10 @@ Widget _buildCertificateCard(CertificateService certificate) {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey[300],
                         foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text('Close'),
                     ),
@@ -812,6 +887,52 @@ Widget _buildCertificateCard(CertificateService certificate) {
         ),
       ),
     );
+  }
+
+  Widget _buildSection(String title, List<String> keys, Map<String, dynamic> payload) {
+    List<Widget> rows = [];
+    for (String key in keys) {
+      if (payload[key] != null && payload[key].toString().isNotEmpty) {
+        rows.add(_buildDetailRow(_formatKey(key), payload[key].toString()));
+      }
+    }
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppFonts.bodyText1Style.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...rows,
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  List<Widget> _buildPayloadRows(Map<String, dynamic> payload) {
+    List<Widget> rows = [];
+    for (var entry in payload.entries) {
+      if (entry.key == 'img' || entry.key == 'signiture') continue;
+      if (entry.value == null || entry.value.toString().isEmpty) continue;
+      if (entry.value is Map<String, dynamic>) {
+        // Handle nested map
+        rows.add(_buildDetailRow(_formatKey(entry.key), ''));
+        for (var sub in entry.value.entries) {
+          if (sub.value != null && sub.value.toString().isNotEmpty) {
+            rows.add(_buildDetailRow('  ${_formatKey(sub.key)}', sub.value.toString()));
+          }
+        }
+      } else {
+        rows.add(_buildDetailRow(_formatKey(entry.key), entry.value.toString()));
+      }
+    }
+    return rows;
   }
 
   Widget _buildDetailRow(String label, String value) {

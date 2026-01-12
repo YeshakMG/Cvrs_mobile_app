@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:dio/dio.dart' as dio;
 import '../../../../services/api_service.dart';
 
 enum RequestStatus {
@@ -179,7 +180,7 @@ class ResidentidController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final response = await ApiService.to.get('api/v1/portal-bff/my-requests?page=0&size=10');
+      final response = await ApiService.to.get('citizen-app-service/portal-bff/my-requests?page=0&size=10');
       print('Resident Services API Response Body: ${response.data}'); // Debug log
 
       if (response.statusCode == 200) {
@@ -221,10 +222,15 @@ class ResidentidController extends GetxController {
         allServices.value = residentServicesJson.map((json) => ResidentService.fromJson(json)).toList();
       } else {
         errorMessage.value = 'Failed to load services: ${response.statusCode}';
+        print('Resident Services API Error: Status ${response.statusCode}, Body: ${response.data}');
         Get.snackbar('Error', errorMessage.value);
       }
     } catch (e) {
       errorMessage.value = 'Error fetching services: $e';
+      print('Resident Services API Exception: $e');
+      if (e is dio.DioException && e.response != null) {
+        print('Resident Services API Error Response: ${e.response!.data}');
+      }
       Get.snackbar('Error', errorMessage.value);
       // Fallback to sample data for development
      // _loadSampleData();

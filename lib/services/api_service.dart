@@ -6,7 +6,9 @@ class ApiService extends GetxService {
   static ApiService get to => Get.find();
 
   late final dio.Dio _dio;
-  final String baseUrl = 'https://crrsa-api.risertechservices.com/';
+  final String baseUrl = 'https://crrsa-api.risertechservices.com/api/v1/';
+ 
+
 
   @override
   void onInit() {
@@ -33,9 +35,12 @@ class ApiService extends GetxService {
         if (authService.accessToken.value.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer ${authService.accessToken.value}';
         }
+        print('API Request: ${options.method} ${options.baseUrl}${options.path}');
+        print('Headers: ${options.headers}');
         handler.next(options);
       },
       onError: (error, handler) async {
+        print('API Error: ${error.response?.statusCode} ${error.response?.data}');
         // If we get 401, try to refresh token
         if (error.response?.statusCode == 401) {
           final authService = AuthService.to;

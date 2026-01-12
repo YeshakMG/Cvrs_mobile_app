@@ -21,7 +21,7 @@ class MyComplaintsController extends GetxController {
 
     try {
       final response = await ApiService.to.get(
-        'api/v1/complaint-service/complaints/my-complaints',
+        'citizen-app-service/complaint-service/complaints/my-complaints',
         queryParameters: {
           'page': currentPage.value.toString(),
           'size': pageSize.value.toString(),

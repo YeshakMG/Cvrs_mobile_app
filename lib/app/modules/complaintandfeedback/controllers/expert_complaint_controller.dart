@@ -91,9 +91,9 @@ class ExpertComplaintController extends GetxController {
       userId.value = scannedUserId;
 
       // Fetch user details from API
-      final fullUrl = '${ApiService.to.baseUrl}api/v1/portal-bff/users/$userId';
+      final fullUrl = '${ApiService.to.baseUrl}citizen-app-service/portal-bff/users/$userId';
       print('Calling API: $fullUrl');
-      final response = await ApiService.to.get('api/v1/portal-bff/users/$userId');
+      final response = await ApiService.to.get('citizen-app-service/portal-bff/users/$userId');
 
       print('User Details API Response: ${response.data}');
 
@@ -251,7 +251,7 @@ class ExpertComplaintController extends GetxController {
         }).toList() : [],
       };
 
-      final response = await ApiService.to.post('api/v1/complaint-service/complaints', data: data);
+      final response = await ApiService.to.post('citizen-app-service/complaint-service/complaints', data: data);
 
       print('Expert Complaint Submit Response: ${response.data}');
 

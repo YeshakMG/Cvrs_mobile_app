@@ -65,7 +65,7 @@ class ServiceComplaintController extends GetxController {
   Future<void> fetchServiceTypes() async {
     try {
       isLoadingServiceTypes.value = true;
-      final response = await ApiService.to.get('https://crrsa-api.risertechservices.com/api/v1/portal-bff/reference-data/service-types');
+      final response = await ApiService.to.get('citizen-app-service/portal-bff/reference-data/service-types');
 
       print('Service Types API Response: ${response.data}');
 
@@ -129,7 +129,7 @@ class ServiceComplaintController extends GetxController {
 
   Future<void> fetchSubCities() async {
     try {
-      final response = await ApiService.to.get('https://crrsa-api.risertechservices.com/api/v1/portal-bff/reference-data/administrative-structures?level=SUBCITY&parentId=91cf3266-a2d9-46ba-ae8d-008050512d9e');
+      final response = await ApiService.to.get('citizen-app-service/portal-bff/reference-data/administrative-structures?level=SUBCITY&parentId=91cf3266-a2d9-46ba-ae8d-008050512d9e');
 
       print('Sub-cities API Response: ${response.data}');
 
@@ -216,7 +216,7 @@ class ServiceComplaintController extends GetxController {
 
   Future<void> fetchWoredas(String parentId) async {
     try {
-      final response = await ApiService.to.get('https://crrsa-api.risertechservices.com/api/v1/portal-bff/reference-data/administrative-structures?level=WOREDA&parentId=$parentId');
+      final response = await ApiService.to.get('citizen-app-service/portal-bff/reference-data/administrative-structures?level=WOREDA&parentId=$parentId');
 
       print('Woredas API Response: ${response.data}');
 
@@ -468,7 +468,7 @@ class ServiceComplaintController extends GetxController {
       print('Posting to: https://crrsa-api.risertechservices.com/api/v1/complaint-service/complaints');
       print('Posting complaint data: $data');
 
-      final response = await ApiService.to.post('api/v1/complaint-service/complaints', data: data);
+      final response = await ApiService.to.post('citizen-app-service/complaint-service/complaints', data: data);
 
       print('Complaint Submit Response: ${response.data}');
 

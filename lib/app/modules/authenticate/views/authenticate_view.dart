@@ -5,6 +5,7 @@ import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
 import '../../../routes/app_pages.dart';
 import '../../../../widgets/bottom_navigation.dart';
+import '../../../controllers/bottom_navigation_controller.dart';
 import '../controllers/authenticate_controller.dart';
 
 class CertificateIdController extends TextEditingController {
@@ -24,7 +25,12 @@ class AuthenticateView extends GetView<AuthenticateController> {
   Widget build(BuildContext context) {
     final certificateController = CertificateIdController(controller);
 
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        Get.offNamed(Routes.HOME);
+        return false;
+      },
+      child: Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
@@ -48,7 +54,10 @@ class AuthenticateView extends GetView<AuthenticateController> {
         centerTitle: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Get.back(),
+          onPressed: () {
+            print('Back button pressed');
+            Get.offNamed(Routes.HOME);
+          },
         ),
       ),
       body: SafeArea(
@@ -205,14 +214,14 @@ class AuthenticateView extends GetView<AuthenticateController> {
                                         text: TextSpan(
                                           children: [
                                             TextSpan(
-                                              text: 'Your request for autehtication with Id  ',
+                                              text: 'Your request for authentication with certificate number ',
                                               style: AppFonts.bodyText2Style.copyWith(
                                                 color: AppColors.textSecondary,
                                                 height: 1.4,
                                               ),
                                             ),
                                             TextSpan(
-                                              text: controller.certificateId.value,
+                                              text: controller.authenticatedUser.value!.certificateNo,
                                               style: AppFonts.bodyText2Style.copyWith(
                                                 color: AppColors.primary,
                                                 height: 1.4,
@@ -249,12 +258,10 @@ class AuthenticateView extends GetView<AuthenticateController> {
                                             //   ),
                                             // ),
                                             const SizedBox(height: 12),
-                                            _buildDetailRow('Registration No', controller.authenticatedUser.value?.certificateNo ?? ''),
-                                            _buildDetailRow('Full Name', controller.authenticatedUser.value?.fullName ?? ''),
-                                            _buildDetailRow('Date of Birth', controller.authenticatedUser.value?.dateOfBirth ?? ''),
-                                            _buildDetailRow('Address', controller.authenticatedUser.value?.address ?? ''),
-                                            _buildDetailRow('Phone No', controller.authenticatedUser.value?.phoneNo ?? ''),
-                                            _buildDetailRow('Nationality', controller.authenticatedUser.value?.nationality ?? ''),
+                                            if (controller.authenticatedUser.value?.credentialSubject != null)
+                                              ...controller.authenticatedUser.value!.credentialSubject!.entries.map((entry) {
+                                                return _buildDetailRow(entry.key, entry.value.toString());
+                                              }).toList(),
                                           ],
                                         ),
                                       ),
@@ -281,8 +288,9 @@ class AuthenticateView extends GetView<AuthenticateController> {
         ),
       ),
       bottomNavigationBar: const BottomNavigationWidget(),
-    );
-  }
+     ),
+   );
+ }
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(

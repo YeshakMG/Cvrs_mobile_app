@@ -20,6 +20,7 @@ class SettingsView extends GetView<SettingsController> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
+            print('Back button pressed');
             // Navigate back to Home
             bottomNavController.changeTab(0);
             Get.offNamed('/home');
