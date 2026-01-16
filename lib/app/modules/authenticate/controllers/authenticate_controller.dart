@@ -64,7 +64,7 @@ class JWKSCache {
       return _cachedJWKS!;
     }
 
-    final response = await ApiService.to.get('citizen-app-service/credential-service/keys/.well-known/jwks.json');
+    final response = await ApiService.to.get('credential-service/keys/.well-known/jwks.json');
 
     _cachedJWKS = response.data;
     _cacheExpiry = DateTime.now().add(Duration(hours: 24));

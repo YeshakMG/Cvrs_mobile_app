@@ -14,6 +14,7 @@ import 'dart:convert';
 import '../../../constants/colors.dart';
 import '../../../constants/fonts.dart';
 import '../../../../services/api_service.dart';
+import '../../../../services/auth_service.dart';
 import '../controllers/digitalcertificates_controller.dart';
 
 class DigitalcertificatesView extends GetView<DigitalcertificatesController> {
@@ -232,26 +233,35 @@ Widget _buildCertificateCard(CertificateService certificate) {
               width: 1,
             ),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: certificate.payload['img'] != null && certificate.payload['img'].toString().isNotEmpty
-                  ? Image.network(
-                      certificate.payload['img'],
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          color: Colors.grey[100],
-                          child: const Center(child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.description, size: 40, color: Colors.grey),
-                    )
-                  : const Icon(Icons.description, size: 40, color: Colors.grey),
+          child: GestureDetector(
+            onTap: () => _showFullScreenImage(certificate),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: certificate.localImagePath != null && File(certificate.localImagePath!).existsSync()
+                    ? Image.file(
+                        File(certificate.localImagePath!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.description, size: 40, color: Colors.grey),
+                      )
+                    : certificate.payload['img'] != null && certificate.payload['img'].toString().isNotEmpty
+                        ? Image.network(
+                            certificate.payload['img'],
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: Colors.grey[100],
+                                child: const Center(child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.description, size: 40, color: Colors.grey),
+                          )
+                        : const Icon(Icons.description, size: 40, color: Colors.grey),
+            ),
           ),
         ),
 
@@ -323,30 +333,6 @@ Widget _buildCertificateCard(CertificateService certificate) {
                 ),
               ],
               const SizedBox(height: 5),
-
-              // ✅ Horizontal icons: Preview | Share | Download
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => _previewCertificate(certificate),
-                    icon: const Icon(Icons.visibility,
-                        color: AppColors.primary, size: 18),
-                    splashRadius: 22,
-                  ),
-                  IconButton(
-                    onPressed: () => _shareCertificate(certificate),
-                    icon: const Icon(Icons.share,
-                        color: AppColors.primary, size: 18),
-                    splashRadius: 22,
-                  ),
-                  IconButton(
-                    onPressed: () => _downloadCertificate(certificate),
-                    icon: const Icon(Icons.download,
-                        color: AppColors.primary, size: 18),
-                    splashRadius: 22,
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -444,19 +430,13 @@ Widget _buildCertificateCard(CertificateService certificate) {
   }
 
   Future<void> _downloadCertificate(CertificateService certificate) async {
-    String? downloadUrl;
+    // Get fileId from certificate
+    String? fileId = certificate.fileId;
 
-    // Prefer img, fallback to signiture
-    if (certificate.payload['img'] != null && certificate.payload['img'].toString().isNotEmpty) {
-      downloadUrl = certificate.payload['img'];
-    } else if (certificate.payload['signiture'] != null && certificate.payload['signiture'].toString().isNotEmpty) {
-      downloadUrl = certificate.payload['signiture'];
-    }
-
-    if (downloadUrl == null || downloadUrl.isEmpty) {
+    if (fileId == null || fileId.isEmpty) {
       Get.snackbar(
         'Download Unavailable',
-        'No image available for ${certificate.name}',
+        'No file ID available for ${certificate.name}',
         snackPosition: SnackPosition.BOTTOM,
       );
       return;
@@ -466,72 +446,136 @@ Widget _buildCertificateCard(CertificateService certificate) {
       // Show loading
       Get.snackbar(
         'Downloading',
-        'Downloading image for ${certificate.name}...',
+        'Downloading certificate for ${certificate.name}...',
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 2),
       );
 
-      // Get download directory
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName = '${certificate.name.replaceAll(' ', '_')}_image.jpg';
-      final filePath = '${directory.path}/$fileName';
+      // Get download directory (/storage/Download/)
+      final downloadDir = Directory('/storage/Download');
+      if (!await downloadDir.exists()) {
+        await downloadDir.create(recursive: true);
+      }
+      final fileName = '${certificate.name.replaceAll(' ', '_')}_certificate.jpg';
+      final filePath = '${downloadDir.path}/$fileName';
 
-      print('Download - Starting download for: $downloadUrl');
+      print('Download - Starting download for fileId: $fileId');
 
-      // Download the image
-      final response = await Dio().get(
-        downloadUrl,
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {
-            'Accept': '*/*',
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36',
-          },
-        ),
+      // Download using the API endpoint
+      final downloadDio = Dio(BaseOptions(
+        baseUrl: 'https://crrsa-api.risertechservices.com/api/v1/',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ));
+
+      // Add auth token
+      if (AuthService.to.accessToken.value.isNotEmpty) {
+        downloadDio.options.headers['Authorization'] = 'Bearer ${AuthService.to.accessToken.value}';
+      }
+
+      final response = await downloadDio.get(
+        'citizen-app-service/files/download?fileId=$fileId',
       );
 
       print('Download response status: ${response.statusCode}');
       print('Download response body: ${response.data}');
 
-      if (response.statusCode == 200 && response.data is Uint8List) {
-        final imageBytes = response.data as Uint8List;
+      if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+        final data = response.data as Map<String, dynamic>;
+        if (data['success'] == true && data['data'] is String) {
+          // Parse the data string as JSON
+          final dataJson = data['data'] as String;
+          final parsedData = json.decode(dataJson) as Map<String, dynamic>;
+          final downloadUrl = parsedData['downloadUrl'] as String?;
 
-        // Save to file
-        final file = File(filePath);
-        await file.writeAsBytes(imageBytes);
+          if (downloadUrl != null) {
+            // Now download the actual file from the URL
+            final fileResponse = await Dio().get(
+              downloadUrl,
+              options: Options(
+                responseType: ResponseType.bytes,
+              ),
+            );
 
-        print('Download - File saved to: $filePath');
+            print('File download response status: ${fileResponse.statusCode}');
+            print('File download response body length: ${fileResponse.data?.length ?? 0}');
 
-        // Show success and offer to open
-        Get.snackbar(
-          'Download Complete',
-          'Image saved to: $filePath',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 4),
-          mainButton: TextButton(
-            onPressed: () async {
-              final file = File(filePath);
-              if (await file.exists()) {
-                // Try to open the file
-                final url = Uri.file(filePath);
-                if (await canLaunchUrl(url)) {
-                  await launchUrl(url);
-                } else {
-                  Get.snackbar(
-                    'Open File',
-                    'Unable to open file automatically',
-                    snackPosition: SnackPosition.BOTTOM,
-                  );
-                }
+            if (fileResponse.statusCode == 200 && fileResponse.data is Uint8List) {
+              final fileBytes = fileResponse.data as Uint8List;
+
+              // Get download directory (external storage Download folder)
+              final directory = await getExternalStorageDirectory();
+              final downloadDir = Directory('${directory!.path}/Download');
+              if (!await downloadDir.exists()) {
+                await downloadDir.create(recursive: true);
               }
-            },
-            child: const Text('Open', style: TextStyle(color: Colors.white)),
-          ),
-        );
+              final fileName = '${certificate.name.replaceAll(' ', '_')}_certificate.jpg';
+              final filePath = '${downloadDir.path}/$fileName';
+
+              // Save to file
+              final file = File(filePath);
+              await file.writeAsBytes(fileBytes);
+
+              print('Download - File saved to: $filePath');
+
+              // Update the certificate with local path
+              certificate.localImagePath = filePath;
+              // Trigger UI update
+              Get.find<DigitalcertificatesController>().certificates.refresh();
+
+              // Show success and offer to open
+              Get.snackbar(
+                'Download Complete',
+                'Certificate saved and displayed locally',
+                snackPosition: SnackPosition.BOTTOM,
+                duration: const Duration(seconds: 4),
+                mainButton: TextButton(
+                  onPressed: () async {
+                    final file = File(filePath);
+                    if (await file.exists()) {
+                      // Try to open the file
+                      final url = Uri.file(filePath);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      } else {
+                        Get.snackbar(
+                          'Open File',
+                          'Unable to open file automatically',
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Open', style: TextStyle(color: Colors.white)),
+                ),
+              );
+            } else {
+              Get.snackbar(
+                'Download Failed',
+                'Unable to download certificate file',
+                snackPosition: SnackPosition.BOTTOM,
+              );
+            }
+          } else {
+            Get.snackbar(
+              'Download Failed',
+              'No download URL received',
+              snackPosition: SnackPosition.BOTTOM,
+            );
+          }
+        } else {
+          Get.snackbar(
+            'Download Failed',
+            'Invalid response format',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
       } else {
         Get.snackbar(
           'Download Failed',
-          'Unable to download image',
+          'Unable to get download URL',
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -539,7 +583,7 @@ Widget _buildCertificateCard(CertificateService certificate) {
       print('Download error: $e');
       Get.snackbar(
         'Download Failed',
-        'Error downloading image for ${certificate.name}: $e',
+        'Error downloading certificate for ${certificate.name}: $e',
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 4),
       );
@@ -847,39 +891,20 @@ Widget _buildCertificateCard(CertificateService certificate) {
                     ],
                   ),
                 const SizedBox(height: 24),
-                // Action buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        Get.back();
-                        await _downloadCertificate(certificate);
-                      },
-                      icon: const Icon(Icons.download),
-                      label: const Text('Download Image'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                // Action button
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () => Get.back(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: () => Get.back(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[300],
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('Close'),
-                    ),
-                  ],
+                    child: const Text('Close'),
+                  ),
                 ),
               ],
             ),
@@ -960,6 +985,50 @@ Widget _buildCertificateCard(CertificateService certificate) {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showFullScreenImage(CertificateService certificate) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            // Full screen image
+            InteractiveViewer(
+              child: Center(
+                child: certificate.localImagePath != null && File(certificate.localImagePath!).existsSync()
+                      ? Image.file(
+                          File(certificate.localImagePath!),
+                          fit: BoxFit.contain,
+                        )
+                      : certificate.payload['img'] != null && certificate.payload['img'].toString().isNotEmpty
+                          ? Image.network(
+                              certificate.payload['img'],
+                              fit: BoxFit.contain,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return const Center(child: CircularProgressIndicator());
+                              },
+                              errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.error, color: Colors.white, size: 50)),
+                            )
+                          : const Center(child: Icon(Icons.description, color: Colors.white, size: 50)),
+              ),
+            ),
+            // Close button
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                onPressed: () => Get.back(),
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                splashRadius: 25,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

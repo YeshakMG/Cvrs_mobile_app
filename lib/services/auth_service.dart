@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,7 +11,7 @@ class AuthService extends GetxService {
   late final Dio _dio;
   final String baseUrl = 'https://crrsa-auth.risertechservices.com/';
   final String clientId = 'crrsa-mobile-client';
-  final String clientSecret = '6fZk1WfC6PSfeGzNvUYd5plveBhcC45q';
+  //final String clientSecret = '6fZk1WfC6PSfeGzNvUYd5plveBhcC45q';
   
   // Token storage
   final accessToken = ''.obs;
@@ -84,8 +85,9 @@ class AuthService extends GetxService {
         '/realms/crrsa-external/protocol/openid-connect/token',
         data: {
           'client_id': clientId,
-          'client_secret': clientSecret,
+          //'client_secret': clientSecret,
           'grant_type': 'password',
+          'scope': 'openid email profile api',
           'username': username,
           'password': password,
         },
@@ -100,6 +102,7 @@ class AuthService extends GetxService {
         final data = response.data;
         print('Login response: $data');
         accessToken.value = data['access_token'] ?? '';
+        print('this is login token: ${accessToken.value}');
         refreshToken.value = data['refresh_token'] ?? '';
         tokenExpiresIn.value = data['expires_in'] ?? 0;
 
@@ -140,6 +143,7 @@ class AuthService extends GetxService {
         '/realms/crrsa-external/protocol/openid-connect/token',
         data: {
           'client_id': clientId,
+          'scope': 'openid email profile api',
           'grant_type': 'authorization_code',
           'code': code,
           'redirect_uri': redirectUri,
@@ -155,6 +159,7 @@ class AuthService extends GetxService {
         final data = response.data;
         print('Token exchange response: $data');
         accessToken.value = data['access_token'] ?? '';
+        print('this is login token: ${accessToken.value}');
         refreshToken.value = data['refresh_token'] ?? '';
         tokenExpiresIn.value = data['expires_in'] ?? 0;
 
@@ -191,12 +196,17 @@ class AuthService extends GetxService {
 
   Future<bool> refreshAccessToken() async {
     try {
+      print('DEBUG: Attempting to refresh token');
+      print('DEBUG: Refresh token length: ${refreshToken.value.length}');
+      print('DEBUG: Refresh token starts with: ${refreshToken.value.substring(0, min(50, refreshToken.value.length))}');
+
       final response = await _dio.post(
         '/realms/crrsa-external/protocol/openid-connect/token',
         data: {
           'client_id': clientId,
-          'client_secret': clientSecret,
+          //'client_secret': clientSecret,
           'grant_type': 'refresh_token',
+          'scope': 'openid email profile api',
           'refresh_token': refreshToken.value,
         },
         options: Options(
@@ -205,20 +215,30 @@ class AuthService extends GetxService {
           },
         ),
       );
-      
+
+      print('DEBUG: Refresh response status: ${response.statusCode}');
+      print('DEBUG: Refresh response data: ${response.data}');
+
       if (response.statusCode == 200) {
         final data = response.data;
         accessToken.value = data['access_token'] ?? '';
         refreshToken.value = data['refresh_token'] ?? refreshToken.value;
         tokenExpiresIn.value = data['expires_in'] ?? 0;
-        
+
+        print('DEBUG: New access token obtained, length: ${accessToken.value.length}');
+
         // Update stored tokens
         await storeTokens();
         return true;
       }
+      print('DEBUG: Refresh failed with status ${response.statusCode}');
       return false;
     } catch (e) {
       print('Token refresh error: $e');
+      if (e is DioException && e.response != null) {
+        print('DEBUG: Refresh error response: ${e.response!.data}');
+        print('DEBUG: Refresh error status: ${e.response!.statusCode}');
+      }
       await logout();
       return false;
     }
@@ -232,7 +252,7 @@ class AuthService extends GetxService {
           '/realms/crrsa-external/protocol/openid-connect/logout',
           data: {
             'client_id': clientId,
-            'client_secret': clientSecret,
+            //'client_secret': clientSecret,
             'refresh_token': refreshToken.value,
           },
           options: Options(

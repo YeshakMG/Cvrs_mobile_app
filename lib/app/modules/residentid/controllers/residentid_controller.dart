@@ -180,7 +180,7 @@ class ResidentidController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final response = await ApiService.to.get('citizen-app-service/portal-bff/my-requests?page=0&size=10');
+      final response = await ApiService.to.get('my-requests?status=PENDING&page=0&size=20');
       print('Resident Services API Response Body: ${response.data}'); // Debug log
 
       if (response.statusCode == 200) {

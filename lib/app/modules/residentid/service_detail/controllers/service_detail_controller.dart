@@ -218,7 +218,7 @@ class ServiceDetailController extends GetxController {
       isLoading.value = true;
 
       final response = await ApiService.to.get(
-        'citizen-app-service/portal-bff/my-requests/${service.id}/detail?page=0&size=10'
+        'my-requests/${service.id}'
       );
 
       if (response.statusCode == 200) {

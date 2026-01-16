@@ -251,7 +251,7 @@ class ExpertComplaintController extends GetxController {
         }).toList() : [],
       };
 
-      final response = await ApiService.to.post('citizen-app-service/complaint-service/complaints', data: data);
+      final response = await ApiService.to.post('complaints', data: data);
 
       print('Expert Complaint Submit Response: ${response.data}');
 

@@ -157,7 +157,7 @@ class FeedbackController extends GetxController {
 
       print('Feedback Payload: $data');
 
-      final response = await ApiService.to.post('citizen-app-service/complaint-service/feedbacks', data: data);
+      final response = await ApiService.to.post('citizen-app-service/complaints/feedbacks', data: data);
 
       print('Feedback Submit Response: ${response.data}');
 
