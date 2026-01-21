@@ -9,6 +9,7 @@ class ApiService extends GetxService {
   late final dio.Dio _dio;
   final String baseUrl = 'https://crrsa-api.risertechservices.com/api/v1/citizen-app-service/';
   //final String baseUrl = 'https://api.aacrrsa.gov.et/api/v1/citizen-app/';
+  
  
 
 

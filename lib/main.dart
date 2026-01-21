@@ -8,8 +8,11 @@ import 'app/controllers/bottom_navigation_controller.dart';
 import 'app/routes/app_pages.dart';
 import 'services/auth_service.dart';
 import 'services/api_service.dart';
+import 'app/modules/authenticate/controllers/authenticate_controller.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   // Configure logging to reduce startup noise
   Logger.root.level = Level.WARNING;
   Logger.root.onRecord.listen((record) {
@@ -27,6 +30,14 @@ void main() async {
 
   // Wait for auth initialization
   await authService.ensureInitialized();
+
+  // Initialize JWKS cache on app start (non-blocking)
+  try {
+    await JWKSCache.getJWKS();
+  } catch (e) {
+    print('Failed to initialize JWKS cache: $e');
+    // Continue app startup even if JWKS fetch fails
+  }
 
   runApp(MyApp(authService: authService));
 }

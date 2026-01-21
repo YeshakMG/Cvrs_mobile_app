@@ -8,6 +8,7 @@ import 'package:dio/dio.dart' as dio;
 import 'package:jose/jose.dart';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../services/api_service.dart';
 import '../../../../services/auth_service.dart';
 import '../views/qr_scanner_view.dart' as qr_scanner;
@@ -52,24 +53,43 @@ class DocumentVerificationResponse {
   });
 }
 
-// Cache JWKS (24 hours)
+// Persistently cache JWKS
 class JWKSCache {
   static Map<String, dynamic>? _cachedJWKS;
-  static DateTime? _cacheExpiry;
+  static const String _jwksKey = 'jwks_cache';
 
   static Future<Map<String, dynamic>> getJWKS() async {
-    if (_cachedJWKS != null &&
-        _cacheExpiry != null &&
-        DateTime.now().isBefore(_cacheExpiry!)) {
+    if (_cachedJWKS != null) {
       return _cachedJWKS!;
     }
 
-    final response = await ApiService.to.get('credential-service/keys/.well-known/jwks.json');
+    final prefs = await SharedPreferences.getInstance();
+    final jwksString = prefs.getString(_jwksKey);
 
+    if (jwksString != null) {
+      _cachedJWKS = jsonDecode(jwksString);
+      return _cachedJWKS!;
+    }
+
+    // Fetch from API if not cached
+    final dioInstance = dio.Dio();
+    final response = await dioInstance.get('https://crrsa-api.risertechservices.com/api/v1/credential-service/keys/.well-known/jwks.json');
     _cachedJWKS = response.data;
-    _cacheExpiry = DateTime.now().add(Duration(hours: 24));
+
+    // Store persistently
+    await prefs.setString(_jwksKey, jsonEncode(_cachedJWKS));
 
     return _cachedJWKS!;
+  }
+
+  // Method to refresh JWKS if needed (e.g., on app update or manual refresh)
+  static Future<void> refreshJWKS() async {
+    final dioInstance = dio.Dio();
+    final response = await dioInstance.get('https://crrsa-api.risertechservices.com/api/v1/credential-service/keys/.well-known/jwks.json');
+    _cachedJWKS = response.data;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_jwksKey, jsonEncode(_cachedJWKS));
   }
 }
 

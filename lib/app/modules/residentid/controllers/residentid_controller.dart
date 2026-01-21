@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart' as dio;
 import '../../../../services/api_service.dart';
+import '../../../../services/auth_service.dart';
 
 enum RequestStatus {
   all,
@@ -115,7 +116,10 @@ class ResidentidController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchResidentServices();
+    // Only fetch services if user is authenticated
+    if (AuthService.to.isAuthenticated) {
+      fetchResidentServices();
+    }
   }
 
   List<ResidentService> get filteredServices {

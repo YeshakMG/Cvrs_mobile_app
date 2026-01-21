@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:dio/dio.dart' as dio;
 import '../../../routes/app_pages.dart';
 import '../../../../services/api_service.dart';
+import '../../../../services/auth_service.dart';
 
 enum RequestStatus {
   all,
@@ -110,7 +111,10 @@ class VitalserviceController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchVitalServices();
+    // Only fetch services if user is authenticated
+    if (AuthService.to.isAuthenticated) {
+      fetchVitalServices();
+    }
   }
 
   List<VitalService> get filteredServices {
